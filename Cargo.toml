@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "emscripten-sys",
+    #"emscripten-functions",
+]
