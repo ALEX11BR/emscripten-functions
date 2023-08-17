@@ -1,9 +1,15 @@
-use regex::escape;
-use std::{env, path::PathBuf};
+//! ```cargo
+//! [dependencies]
+//! bindgen = "0.66.1"
+//! regex = "1.9.3"
+//! ```
 
-fn build_binding(header_name: &str, emscripten_path: PathBuf) {
-    let emscripten_headers_path = emscripten_path.join("cache/sysroot/include");
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+use regex::escape;
+use std::path::PathBuf;
+
+fn build_binding(header_name: &str) {
+    let emscripten_headers_path = PathBuf::from("emscripten/cache/sysroot/include");
+    let out_path = PathBuf::from("src");
 
     bindgen::Builder::default()
         .header(
@@ -15,14 +21,14 @@ fn build_binding(header_name: &str, emscripten_path: PathBuf) {
         // We're interested only in the functions & types defined in `emscripten` headers,
         // not in the ones from e.g. `stdlib.h`
         .allowlist_file(format!(
-            "^({}.*)$",
+            "{}.*",
             escape(
                 &emscripten_headers_path
                     .join("emscripten/")
                     .to_string_lossy()
             )
         ))
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        //.parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect(&format!("Unable to generate bindings for {}", header_name))
         .write_to_file(out_path.join(format!("{}.rs", header_name)))
@@ -30,13 +36,7 @@ fn build_binding(header_name: &str, emscripten_path: PathBuf) {
 }
 
 fn main() {
-    let emscripten_path = PathBuf::from(if cfg!(feature = "system-headers") {
-        env::var("EMSCRIPTEN_ROOT").expect(
-            "`EMSCRIPTEN_ROOT` should be set if compiling using the `system-headers` feature",
-        )
-    } else {
-        "emscripten".to_string()
-    });
-
-    build_binding("emscripten", emscripten_path)
+    build_binding("emscripten");
+    build_binding("html5");
+    build_binding("console");
 }
