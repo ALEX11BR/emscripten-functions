@@ -2,5 +2,5 @@
 
 members = [
     "emscripten-sys",
-    #"emscripten-functions",
+    "emscripten-functions",
 ]
