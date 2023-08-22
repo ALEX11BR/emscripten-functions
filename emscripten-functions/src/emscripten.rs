@@ -14,7 +14,9 @@ thread_local! {
 }
 
 /// Sets the given function as the main loop of the calling thread, using the emscripten-defined `emscripten_set_main_loop`.
-/// The given function accepts a mutable reference to the variable `arg` that may represent the loop state.
+/// The given function accepts a mutable reference to the variable `arg` that may contain the loop state and whatever is needed for it to run.
+/// 
+/// The main loop can be cancelled using the `cancel_main_loop` function.
 ///
 /// # Arguments
 /// * `func` - The function to be set as main event loop for the calling thread.
@@ -52,6 +54,18 @@ pub fn set_main_loop_with_arg<F, T>(
     unsafe {
         emscripten::emscripten_set_main_loop(Some(wrapper_func), fps, simulate_infinite_loop as i32)
     };
+}
+
+/// Cancels the main loop of the calling thread that was set using `set_main_loop_with_arg`.
+pub fn cancel_main_loop() {
+    unsafe {
+        emscripten::emscripten_cancel_main_loop();
+    }
+
+    // Also let's not forget to free up the main loop function and its state arg.
+    MAIN_LOOP_FUNCTION.with(|func_ref| {
+        *func_ref.borrow_mut() = None;
+    });
 }
 
 /// Runs the given JavaScript script string using the `eval()` function,
