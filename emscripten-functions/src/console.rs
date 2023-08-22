@@ -5,7 +5,7 @@ use emscripten_sys::console;
 /// Prints the given string using `console.log()`
 /// 
 /// # Arguments
-/// * `string` - The string to print
+/// * `string` - The string to print.
 pub fn log<T>(string: T)
 where
     T: AsRef<str>,
@@ -19,7 +19,7 @@ where
 /// Prints the given string using `console.warn()`
 /// 
 /// # Arguments
-/// * `string` - The string to print
+/// * `string` - The string to print.
 pub fn warn<T>(string: T)
 where
     T: AsRef<str>,
@@ -33,7 +33,7 @@ where
 /// Prints the given string using `console.error()`
 /// 
 /// # Arguments
-/// * `string` - The string to print
+/// * `string` - The string to print.
 pub fn error<T>(string: T)
 where
     T: AsRef<str>,
@@ -47,7 +47,7 @@ where
 /// Prints the given string using `out()`
 /// 
 /// # Arguments
-/// * `string` - The string to print
+/// * `string` - The string to print.
 pub fn out<T>(string: T)
 where
     T: AsRef<str>,
@@ -61,7 +61,7 @@ where
 /// Prints the given string using `err()`
 /// 
 /// # Arguments
-/// * `string` - The string to print
+/// * `string` - The string to print.
 pub fn err<T>(string: T)
 where
     T: AsRef<str>,
@@ -75,7 +75,7 @@ where
 /// Prints the given string using `dbg()`
 /// 
 /// # Arguments
-/// * `string` - The string to print
+/// * `string` - The string to print.
 pub fn dbg<T>(string: T)
 where
     T: AsRef<str>,
