@@ -14,10 +14,14 @@ thread_local! {
     static MAIN_LOOP_FUNCTION: RefCell<Option<Box<dyn FnMut()>>> = RefCell::new(None);
 }
 
-/// Sets the given function as the main loop of the calling thread, using the emscripten-defined `emscripten_set_main_loop`.
-/// The given function accepts a mutable reference to the variable `arg` that may contain the loop state and whatever is needed for it to run.
+/// Sets the given function as the main loop of the calling thread, using the emscripten-defined [`emscripten_set_main_loop`].
+/// The given function accepts a mutable reference (argument `arg`) to the variable that will contain the loop state and whatever else is needed for it to run.
 ///
-/// The main loop can be cancelled using the `cancel_main_loop` function.
+/// If you don't need that state argument, check out [`set_main_loop`].
+/// 
+/// The main loop can be cancelled using the [`cancel_main_loop`] function.
+/// 
+/// [`emscripten_set_main_loop`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_set_main_loop
 ///
 /// # Arguments
 /// * `func` - The function to be set as main event loop for the calling thread.
@@ -25,8 +29,31 @@ thread_local! {
 ///   It will be consumed so that it can be kept alive during the loop.
 ///   It must be `'static`, that means `arg`'s type should only contain owned data and `'static` references, if any.
 /// * `fps` - The number of calls of the function per second.
-///   If set to a value <= 0, the browser's `requestAnimationFrame` function will be used (recommended when using the main function for rendering) instead of a fixed rate.
+///   If set to a value <= 0, the browser's [`requestAnimationFrame()`] function will be used (recommended when using the main function for rendering) instead of a fixed rate.
 /// * `simulate_infinite_loop` - If `true`, no code after the function call will be executed, otherwise the code after the function call will be executed.
+/// 
+/// [`requestAnimationFrame()`]: https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+/// 
+/// # Examples
+/// ```rust
+/// struct GameData {
+///     level: u32,
+///     score: u32
+/// }
+/// let mut game_data = GameData {
+///     level: 1,
+///     score: 0
+/// }
+/// 
+/// set_main_loop_with_arg(|data| {
+///     if score < level {
+///         score += 1;
+///     } else {
+///         score = 0;
+///         level += 1;
+///     }
+/// }, game_data, 0, true);
+/// ```
 pub fn set_main_loop_with_arg<F, T>(
     mut func: F,
     mut arg: T,
@@ -57,16 +84,27 @@ pub fn set_main_loop_with_arg<F, T>(
     };
 }
 
-/// Sets the given function as the main loop of the calling thread, using the emscripten-defined `emscripten_set_main_loop`.
+/// Sets the given function as the main loop of the calling thread, using the emscripten-defined [`emscripten_set_main_loop`].
 /// The given function has no parameters.
 ///
-/// The main loop can be cancelled using the `cancel_main_loop` function.
+/// The main loop can be cancelled using the [`cancel_main_loop`] function.
 ///
+/// [`emscripten_set_main_loop`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_set_main_loop
+/// 
 /// # Arguments
 /// * `func` - The function to be set as main event loop for the calling thread.
 /// * `fps` - The number of calls of the function per second.
-///   If set to a value <= 0, the browser's `requestAnimationFrame` function will be used (recommended when using the main function for rendering) instead of a fixed rate.
+///   If set to a value <= 0, the browser's [`requestAnimationFrame()`] function will be used (recommended when using the main function for rendering) instead of a fixed rate.
 /// * `simulate_infinite_loop` - If `true`, no code after the function call will be executed, otherwise the code after the function call will be executed.
+/// 
+/// [`requestAnimationFrame()`]: https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+/// 
+/// # Examples
+/// ```rust
+/// set_main_loop(|| {
+///     println!("Hello world every half second!");
+/// }, 2, true);
+/// ```
 pub fn set_main_loop<F>(mut func: F, fps: c_int, simulate_infinite_loop: bool)
 where
     F: 'static + FnMut(),
@@ -74,7 +112,7 @@ where
     set_main_loop_with_arg(move |_| func(), (), fps, simulate_infinite_loop);
 }
 
-/// Cancels the main loop of the calling thread that was set using `set_main_loop_with_arg`.
+/// Cancels the main loop of the calling thread that was set using [`set_main_loop_with_arg`] or [`set_main_loop`].
 pub fn cancel_main_loop() {
     unsafe {
         emscripten::emscripten_cancel_main_loop();
@@ -123,10 +161,16 @@ pub enum MainLoopTiming {
 /// * `true` if the main loop function is set.
 /// * `false` if the main loop function isn't set.
 ///
-/// If you're only interested in seeing whether the main loop function is set or not, check out the `is_main_loop_set` function.
+/// If you're only interested in seeing whether the main loop function is set or not, check out the [`is_main_loop_set`] function.
 ///
 /// # Arguments
 /// * `timing` - the timing parameters to apply to the main loop.
+/// 
+/// # Examples
+/// ```rust
+/// set_main_loop_timing(MainLoopTiming::SetTimeout(33));
+/// // the main function will now run at ~30fps
+/// ```
 pub fn set_main_loop_timing(timing: &MainLoopTiming) -> bool {
     let (mode, value) = match timing {
         MainLoopTiming::SetTimeout(ms) => (emscripten::EM_TIMING_SETTIMEOUT, *ms),
@@ -157,6 +201,24 @@ impl Display for MainLoopInvalidTiming {
 /// Returns the main loop timing parameters of the main loop.
 ///
 /// If the parameters have an invalid mode, an error with the found parameters is returned instead.
+/// 
+/// # Examples
+/// ```rust
+/// match get_main_loop_timing() {
+///     Ok(MainLoopTiming::SetTimeout(ms)) => {
+///         println!("It runs every {} ms", ms);
+///     }
+///     Ok(MainLoopTiming::RequestAnimationFrame(_)) => {
+///         println!("You render stuff as you should");
+///     }
+///     Ok(MainLoopTiming::SetImmediate) => {
+///         println!("Why are you doing this???");
+///     }
+///     Err(err) => {
+///         println!("What??? {}", err);
+///     }
+/// };
+/// ```
 pub fn get_main_loop_timing() -> Result<MainLoopTiming, MainLoopInvalidTiming> {
     let mut mode: c_int = 0;
     let mut value: c_int = 0;
@@ -176,6 +238,13 @@ pub fn get_main_loop_timing() -> Result<MainLoopTiming, MainLoopInvalidTiming> {
 /// It returns:
 /// * `true` if the main loop function is set.
 /// * `false` if the main loop function isn't set.
+/// 
+/// # Examples
+/// ```rust
+/// if is_main_loop_set() {
+///     println!("It's set. It may be paused, but that should be pretty rare.");
+/// }
+/// ```
 pub fn is_main_loop_set() -> bool {
     // This is done by setting the main loop timing to the values that it already is,
     // and using the `emscripten_set_main_loop_timing` return value to see
@@ -189,33 +258,64 @@ pub fn is_main_loop_set() -> bool {
     }
 }
 
-/// Exits the program immediately while keeping the runtime alive, using `emscripten_exit_with_live_runtime`.
+/// Exits the program immediately while keeping the runtime alive, using [`emscripten_exit_with_live_runtime`].
+/// 
+/// [`emscripten_exit_with_live_runtime`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_exit_with_live_runtime
 pub fn exit_with_live_runtime() {
     unsafe {
         emscripten::emscripten_exit_with_live_runtime();
     }
 }
 
-/// Exits the program and kills the runtime, using `emscripten_force_exit`.
-/// Like libc's `exit`, but works even if `exit_with_live_runtime` was run.
+/// Exits the program and kills the runtime, using [`emscripten_force_exit`].
+/// Like libc's [`exit`], but works even if [`exit_with_live_runtime`] was run.
 ///
 /// Only works if the project is built with `EXIT_RUNTIME` set - this is not the default.
 /// Build with `-sEXIT_RUNTIME` if you want to use this function.
 ///
+/// [`emscripten_force_exit`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_force_exit
+/// [`exit`]: https://linux.die.net/man/3/exit
+/// 
 /// # Arguments
 /// * `status` - the exit status, the same as for libc's `exit`.
+/// 
+/// # Examples
+/// ```rust
+/// force_exit(0); // Exits with status 0.
+/// ```
+/// ```rust
+/// force_exit(1); // Exits with status 1.
+/// ```
+/// ```rust
+/// force_exit(101); // Exits with status 101.
+/// ```
 pub fn force_exit(status: c_int) {
     unsafe {
         emscripten::emscripten_force_exit(status);
     }
 }
 
-/// Returns the value of `window.devicePixelRatio`, using the emscripten-defined `emscripten_get_device_pixel_ratio`.
+/// Returns the value of [`window.devicePixelRatio`], using the emscripten-defined [`emscripten_get_device_pixel_ratio`].
+/// 
+/// [`window.devicePixelRatio`]: https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio
+/// [`emscripten_get_device_pixel_ratio`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_get_device_pixel_ratio
+/// 
+/// # Examples
+/// ```rust
+/// println!("Your device pixel ratio is {}", get_device_pixel_ratio());
+/// ```
 pub fn get_device_pixel_ratio() -> f64 {
     unsafe { emscripten::emscripten_get_device_pixel_ratio() }
 }
 
-/// Returns the window title, using the emscripten-defined `emscripten_get_window_title`.
+/// Returns the window title, using the emscripten-defined [`emscripten_get_window_title`].
+/// 
+/// [`emscripten_get_window_title`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_get_window_title
+/// 
+/// # Examples
+/// ```rust
+/// println!("Your tab title should be '{}'", get_window_title());
+/// ```
 pub fn get_window_title() -> String {
     let title = unsafe { emscripten::emscripten_get_window_title() };
 
@@ -223,10 +323,18 @@ pub fn get_window_title() -> String {
     title_cstr.to_str().unwrap().to_string()
 }
 
-/// Sets the window title, using the emscripten-defined `emscripten_set_window_title`.
+/// Sets the window title, using the emscripten-defined [`emscripten_set_window_title`].
 ///
+/// [`emscripten_set_window_title`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_set_window_title
+/// 
 /// # Arguments
 /// * `title` - The new title
+/// 
+/// # Examples
+/// ```rust
+/// set_window_title("My Web App");
+/// set_window_title(format!("My app {} u", 3 + 1));
+/// ```
 pub fn set_window_title<T>(title: T)
 where
     T: AsRef<str>,
@@ -238,10 +346,31 @@ where
     }
 }
 
-/// The result of the `get_screen_size` function.
+/// The result of the [`get_screen_size`] function.
 ///
-/// Implements `Display` as `{width}x{height}`.
-/// Useful for writing the screen size easily, e.g. using `.to_string()` in your app.
+/// Implements [`Display`] as `{width}x{height}`.
+/// Useful for writing the screen size easily, e.g. using [`.to_string()`] in your app.
+/// 
+/// [`Display`]: https://doc.rust-lang.org/std/fmt/trait.Display.html
+/// [`.to_string()`]: https://doc.rust-lang.org/std/string/trait.ToString.html#tymethod.to_string
+/// 
+/// # Examples
+/// ```rust
+/// let screen_size = get_screen_size();
+/// 
+/// // This should display something like: "Your screen size is 800x600"
+/// println!("Your screen size is {}", screen_size);
+/// 
+/// let an_old_size = ScreenSize {
+///     width: 800,
+///     height: 600
+/// };
+/// if an_old_size == screen_size {
+///     println!("Wow, you have the 'old' size of 800x600");
+/// }
+/// 
+/// println!("You have {} pixels", screen_size.width * screen_size.height);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScreenSize {
     pub width: c_int,
@@ -253,7 +382,17 @@ impl Display for ScreenSize {
     }
 }
 
-/// Returns the width and height of the screen in a nice `ScreenSize` structure.
+/// Returns the width and height of the screen in a nice [`ScreenSize`] structure.
+/// 
+/// # Examples
+/// ```rust
+/// let screen_size = get_screen_size();
+/// 
+/// // This should display something like: "Your screen size is 800x600"
+/// println!("Your screen size is {}", screen_size);
+/// 
+/// println!("You have {} pixels", screen_size.width * screen_size.height);
+/// ```
 pub fn get_screen_size() -> ScreenSize {
     let mut width = 0;
     let mut height = 0;
@@ -265,31 +404,75 @@ pub fn get_screen_size() -> ScreenSize {
     return ScreenSize { width, height };
 }
 
-/// Hides the OS mouse cursor over the canvas, unlike SDL's `SDL_ShowCursor`, which works with the SDL cursor.
+/// Hides the OS mouse cursor over the canvas, unlike SDL's [`SDL_ShowCursor`], which works with the SDL cursor.
 ///
 /// Useful if you draw your own cursor.
+/// 
+/// [`SDL_ShowCursor`]: https://wiki.libsdl.org/SDL2/SDL_ShowCursor
 pub fn hide_mouse() {
     unsafe {
         emscripten::emscripten_hide_mouse();
     }
 }
 
-/// Returns the representation of the current app running time with the highest precision using the emscripten-defined `emscripten_get_now`.
-/// It is most likely implemented using `performance.now()`, and is relevant only in comparison with other calls to this function.
+/// Returns the representation of the current app running time with the highest precision using the emscripten-defined [`emscripten_get_now`].
+/// It is most likely implemented using [`performance.now()`], and is relevant only in comparison with other calls to this function.
+/// 
+/// [`emscripten_get_now`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_get_now
+/// [`performance.now()`]: https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
+/// 
+/// # Examples
+/// ```rust
+/// let start_time = get_now();
+/// 
+/// let x = 0;
+/// for i in 1..100 {
+///     x += i;
+/// }
+/// 
+/// println!("It took {} seconds", get_now() - start_time);
+/// ```
 pub fn get_now() -> f64 {
     unsafe { emscripten::emscripten_get_now() }
 }
 
-/// Returns a random number in range [0,1), with `Math.random()`, using the emscripten-defined `emscripten_random`.
+/// Returns a random number in range [0,1), with [`Math.random()`], using the emscripten-defined [`emscripten_random`].
+/// 
+/// [`Math.random()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+/// [`emscripten_random`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_random
+/// 
+/// # Examples
+/// ```rust
+/// assert!(random() >= 0);
+/// assert!(random() < 1);
+/// ```
 pub fn random() -> f32 {
     unsafe { emscripten::emscripten_random() }
 }
 
-/// Runs the given JavaScript script string using the `eval()` function,
-/// using the emscripten-defined `emscripten_run_script`.
+/// Runs the given JavaScript script string with the [`eval()`] JS function,
+/// using the emscripten-defined [`emscripten_run_script`].
+/// 
+/// [`eval()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
+/// [`emscripten_run_script`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_run_script
 ///
 /// # Arguments
 /// * `script` - The script to execute.
+/// 
+/// # Examples
+/// ```rust
+/// run_script("alert('Hello world')");
+/// 
+/// // The `.escape_unicode()` method makes it safe to pass untrusted user input.
+/// run_script(
+///     format!(
+///         r##"
+///             document.querySelector("#this-is-secure").innerHTML = "{}"
+///         "##, 
+///         "untrusted user input".escape_unicode()
+///     )
+/// );
+/// ```
 pub fn run_script<T>(script: T)
 where
     T: AsRef<str>,
@@ -298,13 +481,22 @@ where
     unsafe { emscripten::emscripten_run_script(script_cstring.as_ptr()) }
 }
 
-/// Runs the given JavaScript script string using the `eval()` function,
-/// using the emscripten-defined `emscripten_run_script_int`.
+/// Runs the given JavaScript script string with the [`eval()`] JS function,
+/// using the emscripten-defined [`emscripten_run_script_int`].
 /// It returns the return result of the script, interpreted as a C int.
-/// Most probably the return result is passed to `parseInt()`, with NaN represented as 0.
+/// Most probably the return result is passed to [`parseInt()`], with NaN represented as 0.
+/// 
+/// [`eval()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
+/// [`emscripten_run_script_int`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_run_script_int
+/// [`parseInt()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt
 ///
 /// # Arguments
 /// * `script` - The script to execute.
+/// 
+/// # Examples
+/// ```rust
+/// assert_eq!(run_script_int("1 + 2"), 3);
+/// ```
 pub fn run_script_int<T>(script: T) -> c_int
 where
     T: AsRef<str>,
@@ -313,13 +505,23 @@ where
     unsafe { emscripten::emscripten_run_script_int(script_cstring.as_ptr()) }
 }
 
-/// Runs the given JavaScript script string using the `eval()` function,
-/// using the emscripten-defined `emscripten_run_script_string`.
+/// Runs the given JavaScript script string with the [`eval()`] JS function,
+/// using the emscripten-defined [`emscripten_run_script_string`].
 /// It returns the return result of the script, interpreted as a string if possible.
 /// Otherwise, it returns None.
 ///
+/// [`eval()`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
+/// [`emscripten_run_script_string`]: https://emscripten.org/docs/api_reference/emscripten.h.html#c.emscripten_run_script_string
+/// 
 /// # Arguments
 /// * `script` - The script to execute.
+/// 
+/// # Examples
+/// ```rust
+/// assert_eq!(run_script_string("alert('hi')"), None);
+/// assert_eq!(run_script_string("2"), Some("2"));
+/// assert_eq!(run_script_string("'hi'"), Some("hi"));
+/// ```
 pub fn run_script_string<T>(script: T) -> Option<String>
 where
     T: AsRef<str>,

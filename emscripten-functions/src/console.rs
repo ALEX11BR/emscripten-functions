@@ -2,10 +2,18 @@ use std::ffi::CString;
 
 use emscripten_sys::console;
 
-/// Prints the given string using `console.log()`
+/// Prints the given string using the [`console.log()`] JS function.
+/// 
+/// [`console.log()`]: https://developer.mozilla.org/en-US/docs/Web/API/console/log
 /// 
 /// # Arguments
 /// * `string` - The string to print.
+/// 
+/// # Examples
+/// ```rust
+/// log("Hello, world!");
+/// log(format!("0.1 + 0.2 = {}", 0.1 + 0.2));
+/// ```
 pub fn log<T>(string: T)
 where
     T: AsRef<str>,
@@ -16,10 +24,18 @@ where
     }
 }
 
-/// Prints the given string using `console.warn()`
+/// Prints the given string using the [`console.warn()`] JS function.
+/// 
+/// [`console.warn()`]: https://developer.mozilla.org/en-US/docs/Web/API/console/warn
 /// 
 /// # Arguments
 /// * `string` - The string to print.
+/// 
+/// # Examples
+/// ```rust
+/// warn("Hello, world!");
+/// warn(format!("0.1 + 0.2 = {}", 0.1 + 0.2));
+/// ```
 pub fn warn<T>(string: T)
 where
     T: AsRef<str>,
@@ -30,10 +46,18 @@ where
     }
 }
 
-/// Prints the given string using `console.error()`
+/// Prints the given string using the [`console.error()`] function.
+/// 
+/// [`console.error()`]: https://developer.mozilla.org/en-US/docs/Web/API/console/error
 /// 
 /// # Arguments
 /// * `string` - The string to print.
+/// 
+/// # Examples
+/// ```rust
+/// error("Hello, world!");
+/// error(format!("0.1 + 0.2 = {}", 0.1 + 0.2));
+/// ```
 pub fn error<T>(string: T)
 where
     T: AsRef<str>,
@@ -44,10 +68,16 @@ where
     }
 }
 
-/// Prints the given string using `out()`
+/// Prints the given string using the emscripten-defined `out()` JS function.
 /// 
 /// # Arguments
 /// * `string` - The string to print.
+/// 
+/// # Examples
+/// ```rust
+/// out("Hello, world!");
+/// out(format!("0.1 + 0.2 = {}", 0.1 + 0.2));
+/// ```
 pub fn out<T>(string: T)
 where
     T: AsRef<str>,
@@ -58,10 +88,16 @@ where
     }
 }
 
-/// Prints the given string using `err()`
+/// Prints the given string using the emscripten-defined `err()` JS function.
 /// 
 /// # Arguments
 /// * `string` - The string to print.
+/// 
+/// # Examples
+/// ```rust
+/// err("Hello, world!");
+/// err(format!("0.1 + 0.2 = {}", 0.1 + 0.2));
+/// ```
 pub fn err<T>(string: T)
 where
     T: AsRef<str>,
@@ -72,10 +108,16 @@ where
     }
 }
 
-/// Prints the given string using `dbg()`
+/// Prints the given string using the emscripten-defined `dbg()` JS function.
 /// 
 /// # Arguments
 /// * `string` - The string to print.
+/// 
+/// # Examples
+/// ```rust
+/// dbg("Hello, world!");
+/// dbg(format!("0.1 + 0.2 = {}", 0.1 + 0.2));
+/// ```
 pub fn dbg<T>(string: T)
 where
     T: AsRef<str>,
