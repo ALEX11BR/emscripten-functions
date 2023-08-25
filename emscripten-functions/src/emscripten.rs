@@ -1,3 +1,8 @@
+//! Select functions (with rust-native parameter and return value types) from the emscripten [`emscripten.h`] header file, and helper functions and types for them.
+//! Only most of the "Calling JavaScript From C/C++" and "Browser Execution Environment" functions are implemented.
+//! 
+//! [`emscripten.h`]: https://emscripten.org/docs/api_reference/emscripten.h.html
+
 use std::{
     cell::RefCell,
     ffi::{CStr, CString},
@@ -235,9 +240,7 @@ pub fn get_main_loop_timing() -> Result<MainLoopTiming, MainLoopInvalidTiming> {
     }
 }
 
-/// It returns:
-/// * `true` if the main loop function is set.
-/// * `false` if the main loop function isn't set.
+/// It returns `true` if the main loop function is set, and `false` if the main loop function isn't set.
 /// 
 /// # Examples
 /// ```rust

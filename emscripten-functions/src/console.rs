@@ -1,14 +1,19 @@
+//! Select functions (with rust-native parameter types) from the emscripten [`console.h`] [header file].
+//! 
+//! [`console.h`]: https://github.com/emscripten-core/emscripten/blob/main/site/source/docs/api_reference/console.h.rst
+//! [header file]: https://github.com/emscripten-core/emscripten/blob/main/system/include/emscripten/console.h
+
 use std::ffi::CString;
 
 use emscripten_sys::console;
 
 /// Prints the given string using the [`console.log()`] JS function.
-/// 
+///
 /// [`console.log()`]: https://developer.mozilla.org/en-US/docs/Web/API/console/log
-/// 
+///
 /// # Arguments
 /// * `string` - The string to print.
-/// 
+///
 /// # Examples
 /// ```rust
 /// log("Hello, world!");
@@ -25,12 +30,12 @@ where
 }
 
 /// Prints the given string using the [`console.warn()`] JS function.
-/// 
+///
 /// [`console.warn()`]: https://developer.mozilla.org/en-US/docs/Web/API/console/warn
-/// 
+///
 /// # Arguments
 /// * `string` - The string to print.
-/// 
+///
 /// # Examples
 /// ```rust
 /// warn("Hello, world!");
@@ -47,12 +52,12 @@ where
 }
 
 /// Prints the given string using the [`console.error()`] function.
-/// 
+///
 /// [`console.error()`]: https://developer.mozilla.org/en-US/docs/Web/API/console/error
-/// 
+///
 /// # Arguments
 /// * `string` - The string to print.
-/// 
+///
 /// # Examples
 /// ```rust
 /// error("Hello, world!");
@@ -69,10 +74,10 @@ where
 }
 
 /// Prints the given string using the emscripten-defined `out()` JS function.
-/// 
+///
 /// # Arguments
 /// * `string` - The string to print.
-/// 
+///
 /// # Examples
 /// ```rust
 /// out("Hello, world!");
@@ -89,10 +94,10 @@ where
 }
 
 /// Prints the given string using the emscripten-defined `err()` JS function.
-/// 
+///
 /// # Arguments
 /// * `string` - The string to print.
-/// 
+///
 /// # Examples
 /// ```rust
 /// err("Hello, world!");
@@ -109,10 +114,10 @@ where
 }
 
 /// Prints the given string using the emscripten-defined `dbg()` JS function.
-/// 
+///
 /// # Arguments
 /// * `string` - The string to print.
-/// 
+///
 /// # Examples
 /// ```rust
 /// dbg("Hello, world!");
