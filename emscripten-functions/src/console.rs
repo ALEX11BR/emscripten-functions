@@ -5,7 +5,7 @@
 
 use std::ffi::CString;
 
-use emscripten_sys::console;
+use emscripten_functions_sys::console;
 
 /// Prints the given string using the [`console.log()`] JS function.
 ///

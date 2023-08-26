@@ -10,7 +10,7 @@ use std::{
     os::raw::c_int,
 };
 
-use emscripten_sys::emscripten;
+use emscripten_functions_sys::emscripten;
 
 // The function to run in `set_main_loop_with_arg` sits in this thread-local object so that it will remain permanent throughout the main loop's run.
 // It needs to stay in a global place so that the `wrapper_func` that is passed as argument to `emscripten_set_main_loop`, which must be an `extern "C"` function, can access it (it couldn't have been a closure).

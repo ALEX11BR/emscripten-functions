@@ -10,7 +10,7 @@ keywords = ["emscripten", "bindings"]
 categories = ["api-bindings", "wasm"]
 
 [dependencies]
-emscripten-sys = { path = "../emscripten-sys", version = "3.1.44" }
+emscripten-functions-sys = { path = "../emscripten-functions-sys", version = "3.1.44" }
 
 [package.metadata.docs.rs]
 default-target = "wasm32-unknown-emscripten"

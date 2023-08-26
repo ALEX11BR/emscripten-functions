@@ -1,4 +1,4 @@
-# emscripten-sys
+# emscripten-functions-sys
 
 This crate contains bindgen-generated bindings for the system emscripten functions, as presented in [their API reference](https://emscripten.org/docs/api_reference/index.html).
 The following headers have bindings available:

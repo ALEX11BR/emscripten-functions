@@ -6,9 +6,9 @@ version = 3
 name = "emscripten-functions"
 version = "0.1.0"
 dependencies = [
- "emscripten-sys",
+ "emscripten-functions-sys",
 ]
 
 [[package]]
-name = "emscripten-sys"
+name = "emscripten-functions-sys"
 version = "3.1.44"

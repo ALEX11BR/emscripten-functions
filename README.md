@@ -4,7 +4,7 @@ This project contains 2 crates with functions (and types too) to help rust devel
 
 ## The crates
 
-- `emscripten-sys` - Raw bindgen-generated rust bindings to emscripten’s system functions.
+- `emscripten-functions-sys` - Raw bindgen-generated rust bindings to emscripten’s system functions.
 - `emscripten-functions` - Various emscripten system functions that make programming in rust for emscripten targets easier.
 
 ## Why emscripten for rust
