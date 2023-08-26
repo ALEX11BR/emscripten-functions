@@ -51,12 +51,16 @@ thread_local! {
 /// }
 /// 
 /// set_main_loop_with_arg(|data| {
-///     if score < level {
-///         score += 1;
+///     if data.score < data.level {
+///         data.score += 1;
 ///     } else {
-///         score = 0;
-///         level += 1;
+///         data.score = 0;
+///         data.level += 1;
 ///     }
+/// 
+///     // Here you call your display to screen functions.
+///     // For demonstration purposes I chose `println!`.
+///     println!("Score {}, level {}", data.score, data.level);
 /// }, game_data, 0, true);
 /// ```
 pub fn set_main_loop_with_arg<F, T>(
