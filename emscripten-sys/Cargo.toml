@@ -2,3 +2,12 @@
 name = "emscripten-sys"
 version = "3.1.44"
 edition = "2021"
+license = "MIT"
+description = "Bindgen-generated bindings to emscripten system functions"
+homepage = "https://github.com/ALEX11BR/emscripten-functions/tree/main/emscripten-sys"
+repository = "https://github.com/ALEX11BR/emscripten-functions"
+keywords = ["emscripten", "bindings", "sys"]
+categories = ["api-bindings", "wasm"]
+
+[package.metadata.docs.rs]
+default-target = "wasm32-unknown-emscripten"
