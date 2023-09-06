@@ -1,6 +1,6 @@
 [package]
 name = "emscripten-functions"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "Rust-friendly bindings to various emscripten system functions"
@@ -11,6 +11,9 @@ categories = ["api-bindings", "wasm"]
 
 [dependencies]
 emscripten-functions-sys = { path = "../emscripten-functions-sys", version = "3.1.44" }
+
+[build-dependencies]
+cc = "1.0.83"
 
 [package.metadata.docs.rs]
 default-target = "wasm32-unknown-emscripten"

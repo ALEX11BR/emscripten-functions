@@ -3,12 +3,28 @@
 version = 3
 
 [[package]]
-name = "emscripten-functions"
-version = "0.1.0"
+name = "cc"
+version = "1.0.83"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1174fb0b6ec23863f8b971027804a42614e347eafb0a95bf0b12cdae21fc4d0"
 dependencies = [
+ "libc",
+]
+
+[[package]]
+name = "emscripten-functions"
+version = "0.2.0"
+dependencies = [
+ "cc",
  "emscripten-functions-sys",
 ]
 
 [[package]]
 name = "emscripten-functions-sys"
 version = "3.1.44"
+
+[[package]]
+name = "libc"
+version = "0.2.147"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
