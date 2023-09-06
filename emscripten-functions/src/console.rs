@@ -1,5 +1,5 @@
 //! Select functions (with rust-native parameter types) from the emscripten [`console.h`] [header file].
-//! 
+//!
 //! [`console.h`]: https://github.com/emscripten-core/emscripten/blob/main/site/source/docs/api_reference/console.h.rst
 //! [header file]: https://github.com/emscripten-core/emscripten/blob/main/system/include/emscripten/console.h
 
