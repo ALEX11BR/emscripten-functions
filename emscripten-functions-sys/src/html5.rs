@@ -2,9 +2,10 @@
 
 pub const EM_TRUE: u32 = 1;
 pub const EM_FALSE: u32 = 0;
+pub const LONG_CODE: u8 = 105u8;
 pub const __EMSCRIPTEN_major__: u32 = 3;
 pub const __EMSCRIPTEN_minor__: u32 = 1;
-pub const __EMSCRIPTEN_tiny__: u32 = 44;
+pub const __EMSCRIPTEN_tiny__: u32 = 46;
 pub const EM_TIMING_SETTIMEOUT: u32 = 0;
 pub const EM_TIMING_RAF: u32 = 1;
 pub const EM_TIMING_SETIMMEDIATE: u32 = 2;
@@ -180,7 +181,7 @@ pub const em_promise_result_t_EM_PROMISE_FULFILL: em_promise_result_t = 0;
 pub const em_promise_result_t_EM_PROMISE_MATCH: em_promise_result_t = 1;
 pub const em_promise_result_t_EM_PROMISE_MATCH_RELEASE: em_promise_result_t = 2;
 pub const em_promise_result_t_EM_PROMISE_REJECT: em_promise_result_t = 3;
-pub type em_promise_result_t = ::std::os::raw::c_int;
+pub type em_promise_result_t = ::std::os::raw::c_uint;
 pub type em_promise_callback_t = ::std::option::Option<
     unsafe extern "C" fn(
         result: *mut *mut ::std::os::raw::c_void,
@@ -604,6 +605,14 @@ extern "C" {
     );
 }
 extern "C" {
+    pub fn emscripten_idb_async_clear(
+        db_name: *const ::std::os::raw::c_char,
+        arg: *mut ::std::os::raw::c_void,
+        onclear: em_arg_callback_func,
+        onerror: em_arg_callback_func,
+    );
+}
+extern "C" {
     pub fn emscripten_idb_load(
         db_name: *const ::std::os::raw::c_char,
         file_id: *const ::std::os::raw::c_char,
@@ -633,6 +642,12 @@ extern "C" {
         db_name: *const ::std::os::raw::c_char,
         file_id: *const ::std::os::raw::c_char,
         pexists: *mut ::std::os::raw::c_int,
+        perror: *mut ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn emscripten_idb_clear(
+        db_name: *const ::std::os::raw::c_char,
         perror: *mut ::std::os::raw::c_int,
     );
 }
@@ -944,7 +959,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenKeyboardEvent>(),
-        176usize,
+        192usize,
         concat!("Size of: ", stringify!(EmscriptenKeyboardEvent))
     );
     assert_eq!(
@@ -974,7 +989,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).ctrlKey) as usize - ptr as usize },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -984,7 +999,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).shiftKey) as usize - ptr as usize },
-        16usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -994,7 +1009,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).altKey) as usize - ptr as usize },
-        20usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1004,7 +1019,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).metaKey) as usize - ptr as usize },
-        24usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1014,7 +1029,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).repeat) as usize - ptr as usize },
-        28usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1024,7 +1039,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).charCode) as usize - ptr as usize },
-        32usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1034,7 +1049,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).keyCode) as usize - ptr as usize },
-        36usize,
+        48usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1044,7 +1059,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).which) as usize - ptr as usize },
-        40usize,
+        56usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1054,7 +1069,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).key) as usize - ptr as usize },
-        44usize,
+        64usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1064,7 +1079,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).code) as usize - ptr as usize },
-        76usize,
+        96usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1074,7 +1089,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).charValue) as usize - ptr as usize },
-        108usize,
+        128usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1084,7 +1099,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).locale) as usize - ptr as usize },
-        140usize,
+        160usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1155,7 +1170,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenMouseEvent>(),
-        72usize,
+        120usize,
         concat!("Size of: ", stringify!(EmscriptenMouseEvent))
     );
     assert_eq!(
@@ -1185,7 +1200,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).screenY) as usize - ptr as usize },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1195,7 +1210,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).clientX) as usize - ptr as usize },
-        16usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1205,7 +1220,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).clientY) as usize - ptr as usize },
-        20usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1215,7 +1230,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).ctrlKey) as usize - ptr as usize },
-        24usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1225,7 +1240,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).shiftKey) as usize - ptr as usize },
-        28usize,
+        44usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1235,7 +1250,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).altKey) as usize - ptr as usize },
-        32usize,
+        48usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1245,7 +1260,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).metaKey) as usize - ptr as usize },
-        36usize,
+        52usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1255,7 +1270,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).button) as usize - ptr as usize },
-        40usize,
+        56usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1265,7 +1280,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).buttons) as usize - ptr as usize },
-        42usize,
+        58usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1275,7 +1290,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).movementX) as usize - ptr as usize },
-        44usize,
+        64usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1285,7 +1300,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).movementY) as usize - ptr as usize },
-        48usize,
+        72usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1295,7 +1310,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).targetX) as usize - ptr as usize },
-        52usize,
+        80usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1305,7 +1320,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).targetY) as usize - ptr as usize },
-        56usize,
+        88usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1315,7 +1330,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).canvasX) as usize - ptr as usize },
-        60usize,
+        96usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1325,7 +1340,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).canvasY) as usize - ptr as usize },
-        64usize,
+        104usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1335,7 +1350,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).padding) as usize - ptr as usize },
-        68usize,
+        112usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1452,7 +1467,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenWheelEvent>(),
-        104usize,
+        152usize,
         concat!("Size of: ", stringify!(EmscriptenWheelEvent))
     );
     assert_eq!(
@@ -1472,7 +1487,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).deltaX) as usize - ptr as usize },
-        72usize,
+        120usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWheelEvent),
@@ -1482,7 +1497,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).deltaY) as usize - ptr as usize },
-        80usize,
+        128usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWheelEvent),
@@ -1492,7 +1507,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).deltaZ) as usize - ptr as usize },
-        88usize,
+        136usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWheelEvent),
@@ -1502,7 +1517,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).deltaMode) as usize - ptr as usize },
-        96usize,
+        144usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWheelEvent),
@@ -1546,12 +1561,12 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenUiEvent>(),
-        36usize,
+        40usize,
         concat!("Size of: ", stringify!(EmscriptenUiEvent))
     );
     assert_eq!(
         ::std::mem::align_of::<EmscriptenUiEvent>(),
-        4usize,
+        8usize,
         concat!("Alignment of ", stringify!(EmscriptenUiEvent))
     );
     assert_eq!(
@@ -1566,7 +1581,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).documentBodyClientWidth) as usize - ptr as usize },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1576,7 +1591,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).documentBodyClientHeight) as usize - ptr as usize },
-        8usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1586,7 +1601,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).windowInnerWidth) as usize - ptr as usize },
-        12usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1596,7 +1611,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).windowInnerHeight) as usize - ptr as usize },
-        16usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1606,7 +1621,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).windowOuterWidth) as usize - ptr as usize },
-        20usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1616,7 +1631,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).windowOuterHeight) as usize - ptr as usize },
-        24usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1626,7 +1641,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).scrollTop) as usize - ptr as usize },
-        28usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1636,7 +1651,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).scrollLeft) as usize - ptr as usize },
-        32usize,
+        36usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -2508,12 +2523,12 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenTouchPoint>(),
-        52usize,
+        96usize,
         concat!("Size of: ", stringify!(EmscriptenTouchPoint))
     );
     assert_eq!(
         ::std::mem::align_of::<EmscriptenTouchPoint>(),
-        4usize,
+        8usize,
         concat!("Alignment of ", stringify!(EmscriptenTouchPoint))
     );
     assert_eq!(
@@ -2528,7 +2543,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).screenX) as usize - ptr as usize },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2538,7 +2553,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).screenY) as usize - ptr as usize },
-        8usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2548,7 +2563,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).clientX) as usize - ptr as usize },
-        12usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2558,7 +2573,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).clientY) as usize - ptr as usize },
-        16usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2568,7 +2583,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pageX) as usize - ptr as usize },
-        20usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2578,7 +2593,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pageY) as usize - ptr as usize },
-        24usize,
+        48usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2588,7 +2603,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).isChanged) as usize - ptr as usize },
-        28usize,
+        56usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2598,7 +2613,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).onTarget) as usize - ptr as usize },
-        32usize,
+        60usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2608,7 +2623,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).targetX) as usize - ptr as usize },
-        36usize,
+        64usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2618,7 +2633,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).targetY) as usize - ptr as usize },
-        40usize,
+        72usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2628,7 +2643,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).canvasX) as usize - ptr as usize },
-        44usize,
+        80usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2638,7 +2653,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).canvasY) as usize - ptr as usize },
-        48usize,
+        88usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2664,7 +2679,7 @@ fn bindgen_test_layout_EmscriptenTouchEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenTouchEvent>(),
-        1696usize,
+        3104usize,
         concat!("Size of: ", stringify!(EmscriptenTouchEvent))
     );
     assert_eq!(
@@ -2734,7 +2749,7 @@ fn bindgen_test_layout_EmscriptenTouchEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).touches) as usize - ptr as usize },
-        28usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchEvent),
@@ -2807,7 +2822,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenGamepadEvent>(),
-        1432usize,
+        1440usize,
         concat!("Size of: ", stringify!(EmscriptenGamepadEvent))
     );
     assert_eq!(
@@ -2887,7 +2902,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).index) as usize - ptr as usize },
-        1300usize,
+        1304usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenGamepadEvent),
@@ -2897,7 +2912,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).id) as usize - ptr as usize },
-        1304usize,
+        1312usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenGamepadEvent),
@@ -2907,7 +2922,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).mapping) as usize - ptr as usize },
-        1368usize,
+        1376usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenGamepadEvent),
