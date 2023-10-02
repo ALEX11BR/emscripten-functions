@@ -10,8 +10,12 @@ The following headers have bindings available:
 
 The bindings are based on the emscripten headers from a compiled emscripten release, like the ones at [https://storage.googleapis.com/webassembly/](https://storage.googleapis.com/webassembly/)emscripten-releases-builds/, that are downloaded by [emsdk](https://github.com/emscripten-core/emsdk).
 
-The `emscripten` folder contains the headers taken from the emscripten release (currently at version 3.1.44).
+The `emscripten` folder contains the headers taken from the emscripten release (currently at version 3.1.46).
 
 The `build_bindings.rs` file that can be run with e.g. [rust-script](https://rust-script.org/) creates declarations for the emscripten functions using bindgen.
+
+The `update_emscripten.sh` script updates the headers in the `emscripten` folder to the latest version from the official docker image.
+Set the `DOCKER` variable when running this script to specify a path to your docker.
+Otherwise `docker`, then `podman` will be tried.
 
 The `src` folder already contains the generated bindings.
