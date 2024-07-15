@@ -6,6 +6,7 @@ Functions based on ones from the following emscripten headers are available:
 - `console`
 
 ## Examples
+For more examples and tips for emscripten in rust refer to my [main project's README](https://github.com/ALEX11BR/emscripten-functions/blob/main/README.md).
 
 ### Run javascript from rust
 
@@ -18,7 +19,7 @@ run_script(
     format!(
         r##"
             document.querySelector("#this-is-secure").innerHTML = "{}"
-        "##, 
+        "##,
         "untrusted user input".escape_unicode()
     )
 );

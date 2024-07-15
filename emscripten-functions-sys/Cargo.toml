@@ -1,6 +1,6 @@
 [package]
 name = "emscripten-functions-sys"
-version = "3.2.46"
+version = "3.3.63"
 edition = "2021"
 license = "MIT"
 description = "Bindgen-generated bindings to emscripten system functions"

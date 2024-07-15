@@ -3,9 +3,19 @@
 pub const LONG_CODE: u8 = 105u8;
 pub const EM_TRUE: u32 = 1;
 pub const EM_FALSE: u32 = 0;
+pub const EMSCRIPTEN_RESULT_SUCCESS: u32 = 0;
+pub const EMSCRIPTEN_RESULT_DEFERRED: u32 = 1;
+pub const EMSCRIPTEN_RESULT_NOT_SUPPORTED: i32 = -1;
+pub const EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED: i32 = -2;
+pub const EMSCRIPTEN_RESULT_INVALID_TARGET: i32 = -3;
+pub const EMSCRIPTEN_RESULT_UNKNOWN_TARGET: i32 = -4;
+pub const EMSCRIPTEN_RESULT_INVALID_PARAM: i32 = -5;
+pub const EMSCRIPTEN_RESULT_FAILED: i32 = -6;
+pub const EMSCRIPTEN_RESULT_NO_DATA: i32 = -7;
+pub const EMSCRIPTEN_RESULT_TIMED_OUT: i32 = -8;
 pub const __EMSCRIPTEN_major__: u32 = 3;
 pub const __EMSCRIPTEN_minor__: u32 = 1;
-pub const __EMSCRIPTEN_tiny__: u32 = 46;
+pub const __EMSCRIPTEN_tiny__: u32 = 63;
 pub const EM_TIMING_SETTIMEOUT: u32 = 0;
 pub const EM_TIMING_RAF: u32 = 1;
 pub const EM_TIMING_SETIMMEDIATE: u32 = 2;
@@ -46,6 +56,13 @@ extern "C" {
         arg_sigs: *const ::std::os::raw::c_char,
         ...
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn emscripten_asm_const_ptr_sync_on_main_thread(
+        code: *const ::std::os::raw::c_char,
+        arg_sigs: *const ::std::os::raw::c_char,
+        ...
+    ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
     pub fn emscripten_asm_const_double_sync_on_main_thread(
@@ -197,31 +214,31 @@ extern "C" {
 }
 pub type em_async_wget_onload_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: *mut ::std::os::raw::c_void,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: ::std::os::raw::c_int,
+        userdata: *mut ::std::os::raw::c_void,
+        data: *mut ::std::os::raw::c_void,
+        size: ::std::os::raw::c_int,
     ),
 >;
 extern "C" {
     pub fn emscripten_async_wget_data(
         url: *const ::std::os::raw::c_char,
-        arg: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
         onload: em_async_wget_onload_func,
         onerror: em_arg_callback_func,
     );
 }
 pub type em_async_wget2_onload_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: *const ::std::os::raw::c_char,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        data: *const ::std::os::raw::c_char,
     ),
 >;
 pub type em_async_wget2_onstatus_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: ::std::os::raw::c_int,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        status: ::std::os::raw::c_int,
     ),
 >;
 extern "C" {
@@ -230,7 +247,7 @@ extern "C" {
         file: *const ::std::os::raw::c_char,
         requesttype: *const ::std::os::raw::c_char,
         param: *const ::std::os::raw::c_char,
-        arg: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
         onload: em_async_wget2_onload_func,
         onerror: em_async_wget2_onstatus_func,
         onprogress: em_async_wget2_onstatus_func,
@@ -238,26 +255,26 @@ extern "C" {
 }
 pub type em_async_wget2_data_onload_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: *mut ::std::os::raw::c_void,
-        arg4: ::std::os::raw::c_uint,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        data: *mut ::std::os::raw::c_void,
+        size: ::std::os::raw::c_uint,
     ),
 >;
 pub type em_async_wget2_data_onerror_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: ::std::os::raw::c_int,
-        arg4: *const ::std::os::raw::c_char,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        status: ::std::os::raw::c_int,
+        status_text: *const ::std::os::raw::c_char,
     ),
 >;
 pub type em_async_wget2_data_onprogress_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: ::std::os::raw::c_int,
-        arg4: ::std::os::raw::c_int,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        loaded: ::std::os::raw::c_int,
+        total: ::std::os::raw::c_int,
     ),
 >;
 extern "C" {

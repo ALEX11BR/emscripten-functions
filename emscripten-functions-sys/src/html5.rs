@@ -2,10 +2,20 @@
 
 pub const EM_TRUE: u32 = 1;
 pub const EM_FALSE: u32 = 0;
+pub const EMSCRIPTEN_RESULT_SUCCESS: u32 = 0;
+pub const EMSCRIPTEN_RESULT_DEFERRED: u32 = 1;
+pub const EMSCRIPTEN_RESULT_NOT_SUPPORTED: i32 = -1;
+pub const EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED: i32 = -2;
+pub const EMSCRIPTEN_RESULT_INVALID_TARGET: i32 = -3;
+pub const EMSCRIPTEN_RESULT_UNKNOWN_TARGET: i32 = -4;
+pub const EMSCRIPTEN_RESULT_INVALID_PARAM: i32 = -5;
+pub const EMSCRIPTEN_RESULT_FAILED: i32 = -6;
+pub const EMSCRIPTEN_RESULT_NO_DATA: i32 = -7;
+pub const EMSCRIPTEN_RESULT_TIMED_OUT: i32 = -8;
 pub const LONG_CODE: u8 = 105u8;
 pub const __EMSCRIPTEN_major__: u32 = 3;
 pub const __EMSCRIPTEN_minor__: u32 = 1;
-pub const __EMSCRIPTEN_tiny__: u32 = 46;
+pub const __EMSCRIPTEN_tiny__: u32 = 63;
 pub const EM_TIMING_SETTIMEOUT: u32 = 0;
 pub const EM_TIMING_RAF: u32 = 1;
 pub const EM_TIMING_SETIMMEDIATE: u32 = 2;
@@ -57,16 +67,6 @@ pub const EMSCRIPTEN_EVENT_MOUSEOVER: u32 = 35;
 pub const EMSCRIPTEN_EVENT_MOUSEOUT: u32 = 36;
 pub const EMSCRIPTEN_EVENT_CANVASRESIZED: u32 = 37;
 pub const EMSCRIPTEN_EVENT_POINTERLOCKERROR: u32 = 38;
-pub const EMSCRIPTEN_RESULT_SUCCESS: u32 = 0;
-pub const EMSCRIPTEN_RESULT_DEFERRED: u32 = 1;
-pub const EMSCRIPTEN_RESULT_NOT_SUPPORTED: i32 = -1;
-pub const EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED: i32 = -2;
-pub const EMSCRIPTEN_RESULT_INVALID_TARGET: i32 = -3;
-pub const EMSCRIPTEN_RESULT_UNKNOWN_TARGET: i32 = -4;
-pub const EMSCRIPTEN_RESULT_INVALID_PARAM: i32 = -5;
-pub const EMSCRIPTEN_RESULT_FAILED: i32 = -6;
-pub const EMSCRIPTEN_RESULT_NO_DATA: i32 = -7;
-pub const EMSCRIPTEN_RESULT_TIMED_OUT: i32 = -8;
 pub const EMSCRIPTEN_EVENT_TARGET_INVALID: u32 = 0;
 pub const DOM_KEY_LOCATION_STANDARD: u32 = 0;
 pub const DOM_KEY_LOCATION_LEFT: u32 = 1;
@@ -81,6 +81,7 @@ pub const DOM_DELTA_PAGE: u32 = 2;
 pub const EMSCRIPTEN_DEVICE_MOTION_EVENT_SUPPORTS_ACCELERATION: u32 = 1;
 pub const EMSCRIPTEN_DEVICE_MOTION_EVENT_SUPPORTS_ACCELERATION_INCLUDING_GRAVITY: u32 = 2;
 pub const EMSCRIPTEN_DEVICE_MOTION_EVENT_SUPPORTS_ROTATION_RATE: u32 = 4;
+pub const EMSCRIPTEN_ORIENTATION_UNSUPPORTED: u32 = 0;
 pub const EMSCRIPTEN_ORIENTATION_PORTRAIT_PRIMARY: u32 = 1;
 pub const EMSCRIPTEN_ORIENTATION_PORTRAIT_SECONDARY: u32 = 2;
 pub const EMSCRIPTEN_ORIENTATION_LANDSCAPE_PRIMARY: u32 = 4;
@@ -156,6 +157,13 @@ extern "C" {
         arg_sigs: *const ::std::os::raw::c_char,
         ...
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn emscripten_asm_const_ptr_sync_on_main_thread(
+        code: *const ::std::os::raw::c_char,
+        arg_sigs: *const ::std::os::raw::c_char,
+        ...
+    ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
     pub fn emscripten_asm_const_double_sync_on_main_thread(
@@ -291,31 +299,31 @@ extern "C" {
 }
 pub type em_async_wget_onload_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: *mut ::std::os::raw::c_void,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: ::std::os::raw::c_int,
+        userdata: *mut ::std::os::raw::c_void,
+        data: *mut ::std::os::raw::c_void,
+        size: ::std::os::raw::c_int,
     ),
 >;
 extern "C" {
     pub fn emscripten_async_wget_data(
         url: *const ::std::os::raw::c_char,
-        arg: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
         onload: em_async_wget_onload_func,
         onerror: em_arg_callback_func,
     );
 }
 pub type em_async_wget2_onload_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: *const ::std::os::raw::c_char,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        data: *const ::std::os::raw::c_char,
     ),
 >;
 pub type em_async_wget2_onstatus_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: ::std::os::raw::c_int,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        status: ::std::os::raw::c_int,
     ),
 >;
 extern "C" {
@@ -324,7 +332,7 @@ extern "C" {
         file: *const ::std::os::raw::c_char,
         requesttype: *const ::std::os::raw::c_char,
         param: *const ::std::os::raw::c_char,
-        arg: *mut ::std::os::raw::c_void,
+        userdata: *mut ::std::os::raw::c_void,
         onload: em_async_wget2_onload_func,
         onerror: em_async_wget2_onstatus_func,
         onprogress: em_async_wget2_onstatus_func,
@@ -332,26 +340,26 @@ extern "C" {
 }
 pub type em_async_wget2_data_onload_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: *mut ::std::os::raw::c_void,
-        arg4: ::std::os::raw::c_uint,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        data: *mut ::std::os::raw::c_void,
+        size: ::std::os::raw::c_uint,
     ),
 >;
 pub type em_async_wget2_data_onerror_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: ::std::os::raw::c_int,
-        arg4: *const ::std::os::raw::c_char,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        status: ::std::os::raw::c_int,
+        status_text: *const ::std::os::raw::c_char,
     ),
 >;
 pub type em_async_wget2_data_onprogress_func = ::std::option::Option<
     unsafe extern "C" fn(
-        arg1: ::std::os::raw::c_uint,
-        arg2: *mut ::std::os::raw::c_void,
-        arg3: ::std::os::raw::c_int,
-        arg4: ::std::os::raw::c_int,
+        handle: ::std::os::raw::c_uint,
+        userdata: *mut ::std::os::raw::c_void,
+        loaded: ::std::os::raw::c_int,
+        total: ::std::os::raw::c_int,
     ),
 >;
 extern "C" {
@@ -844,10 +852,7 @@ extern "C" {
 extern "C" {
     pub fn emscripten_set_timeout_loop(
         cb: ::std::option::Option<
-            unsafe extern "C" fn(
-                time: f64,
-                user_data: *mut ::std::os::raw::c_void,
-            ) -> ::std::os::raw::c_int,
+            unsafe extern "C" fn(time: f64, user_data: *mut ::std::os::raw::c_void) -> bool,
         >,
         interval_ms: f64,
         user_data: *mut ::std::os::raw::c_void,
@@ -865,7 +870,7 @@ extern "C" {
 extern "C" {
     pub fn emscripten_set_immediate_loop(
         cb: ::std::option::Option<
-            unsafe extern "C" fn(user_data: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int,
+            unsafe extern "C" fn(user_data: *mut ::std::os::raw::c_void) -> bool,
         >,
         user_data: *mut ::std::os::raw::c_void,
     );
@@ -887,7 +892,7 @@ extern "C" {
     pub fn emscripten_runtime_keepalive_pop();
 }
 extern "C" {
-    pub fn emscripten_runtime_keepalive_check() -> ::std::os::raw::c_int;
+    pub fn emscripten_runtime_keepalive_check() -> bool;
 }
 extern "C" {
     pub fn emscripten_console_log(utf8String: *const ::std::os::raw::c_char);
@@ -938,15 +943,15 @@ extern "C" {
 #[derive(Debug, Copy, Clone)]
 pub struct EmscriptenKeyboardEvent {
     pub timestamp: f64,
-    pub location: ::std::os::raw::c_ulong,
-    pub ctrlKey: ::std::os::raw::c_int,
-    pub shiftKey: ::std::os::raw::c_int,
-    pub altKey: ::std::os::raw::c_int,
-    pub metaKey: ::std::os::raw::c_int,
-    pub repeat: ::std::os::raw::c_int,
-    pub charCode: ::std::os::raw::c_ulong,
-    pub keyCode: ::std::os::raw::c_ulong,
-    pub which: ::std::os::raw::c_ulong,
+    pub location: ::std::os::raw::c_uint,
+    pub ctrlKey: bool,
+    pub shiftKey: bool,
+    pub altKey: bool,
+    pub metaKey: bool,
+    pub repeat: bool,
+    pub charCode: ::std::os::raw::c_uint,
+    pub keyCode: ::std::os::raw::c_uint,
+    pub which: ::std::os::raw::c_uint,
     pub key: [::std::os::raw::c_char; 32usize],
     pub code: [::std::os::raw::c_char; 32usize],
     pub charValue: [::std::os::raw::c_char; 32usize],
@@ -959,7 +964,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenKeyboardEvent>(),
-        192usize,
+        160usize,
         concat!("Size of: ", stringify!(EmscriptenKeyboardEvent))
     );
     assert_eq!(
@@ -989,7 +994,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).ctrlKey) as usize - ptr as usize },
-        16usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -999,7 +1004,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).shiftKey) as usize - ptr as usize },
-        20usize,
+        13usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1009,7 +1014,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).altKey) as usize - ptr as usize },
-        24usize,
+        14usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1019,7 +1024,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).metaKey) as usize - ptr as usize },
-        28usize,
+        15usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1029,7 +1034,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).repeat) as usize - ptr as usize },
-        32usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1039,7 +1044,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).charCode) as usize - ptr as usize },
-        40usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1049,7 +1054,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).keyCode) as usize - ptr as usize },
-        48usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1059,7 +1064,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).which) as usize - ptr as usize },
-        56usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1069,7 +1074,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).key) as usize - ptr as usize },
-        64usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1079,7 +1084,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).code) as usize - ptr as usize },
-        96usize,
+        64usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1089,7 +1094,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).charValue) as usize - ptr as usize },
-        128usize,
+        96usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1099,7 +1104,7 @@ fn bindgen_test_layout_EmscriptenKeyboardEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).locale) as usize - ptr as usize },
-        160usize,
+        128usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenKeyboardEvent),
@@ -1113,13 +1118,13 @@ pub type em_key_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         keyEvent: *const EmscriptenKeyboardEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_keypress_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_key_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1128,7 +1133,7 @@ extern "C" {
     pub fn emscripten_set_keydown_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_key_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1137,7 +1142,7 @@ extern "C" {
     pub fn emscripten_set_keyup_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_key_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1146,23 +1151,23 @@ extern "C" {
 #[derive(Debug, Copy, Clone)]
 pub struct EmscriptenMouseEvent {
     pub timestamp: f64,
-    pub screenX: ::std::os::raw::c_long,
-    pub screenY: ::std::os::raw::c_long,
-    pub clientX: ::std::os::raw::c_long,
-    pub clientY: ::std::os::raw::c_long,
-    pub ctrlKey: ::std::os::raw::c_int,
-    pub shiftKey: ::std::os::raw::c_int,
-    pub altKey: ::std::os::raw::c_int,
-    pub metaKey: ::std::os::raw::c_int,
+    pub screenX: ::std::os::raw::c_int,
+    pub screenY: ::std::os::raw::c_int,
+    pub clientX: ::std::os::raw::c_int,
+    pub clientY: ::std::os::raw::c_int,
+    pub ctrlKey: bool,
+    pub shiftKey: bool,
+    pub altKey: bool,
+    pub metaKey: bool,
     pub button: ::std::os::raw::c_ushort,
     pub buttons: ::std::os::raw::c_ushort,
-    pub movementX: ::std::os::raw::c_long,
-    pub movementY: ::std::os::raw::c_long,
-    pub targetX: ::std::os::raw::c_long,
-    pub targetY: ::std::os::raw::c_long,
-    pub canvasX: ::std::os::raw::c_long,
-    pub canvasY: ::std::os::raw::c_long,
-    pub padding: ::std::os::raw::c_long,
+    pub movementX: ::std::os::raw::c_int,
+    pub movementY: ::std::os::raw::c_int,
+    pub targetX: ::std::os::raw::c_int,
+    pub targetY: ::std::os::raw::c_int,
+    pub canvasX: ::std::os::raw::c_int,
+    pub canvasY: ::std::os::raw::c_int,
+    pub padding: ::std::os::raw::c_int,
 }
 #[test]
 fn bindgen_test_layout_EmscriptenMouseEvent() {
@@ -1170,7 +1175,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenMouseEvent>(),
-        120usize,
+        64usize,
         concat!("Size of: ", stringify!(EmscriptenMouseEvent))
     );
     assert_eq!(
@@ -1200,7 +1205,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).screenY) as usize - ptr as usize },
-        16usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1210,7 +1215,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).clientX) as usize - ptr as usize },
-        24usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1220,7 +1225,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).clientY) as usize - ptr as usize },
-        32usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1230,7 +1235,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).ctrlKey) as usize - ptr as usize },
-        40usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1240,7 +1245,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).shiftKey) as usize - ptr as usize },
-        44usize,
+        25usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1250,7 +1255,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).altKey) as usize - ptr as usize },
-        48usize,
+        26usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1260,7 +1265,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).metaKey) as usize - ptr as usize },
-        52usize,
+        27usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1270,7 +1275,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).button) as usize - ptr as usize },
-        56usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1280,7 +1285,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).buttons) as usize - ptr as usize },
-        58usize,
+        30usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1290,7 +1295,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).movementX) as usize - ptr as usize },
-        64usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1300,7 +1305,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).movementY) as usize - ptr as usize },
-        72usize,
+        36usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1310,7 +1315,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).targetX) as usize - ptr as usize },
-        80usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1320,7 +1325,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).targetY) as usize - ptr as usize },
-        88usize,
+        44usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1330,7 +1335,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).canvasX) as usize - ptr as usize },
-        96usize,
+        48usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1340,7 +1345,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).canvasY) as usize - ptr as usize },
-        104usize,
+        52usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1350,7 +1355,7 @@ fn bindgen_test_layout_EmscriptenMouseEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).padding) as usize - ptr as usize },
-        112usize,
+        56usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenMouseEvent),
@@ -1364,13 +1369,13 @@ pub type em_mouse_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         mouseEvent: *const EmscriptenMouseEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_click_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1379,7 +1384,7 @@ extern "C" {
     pub fn emscripten_set_mousedown_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1388,7 +1393,7 @@ extern "C" {
     pub fn emscripten_set_mouseup_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1397,7 +1402,7 @@ extern "C" {
     pub fn emscripten_set_dblclick_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1406,7 +1411,7 @@ extern "C" {
     pub fn emscripten_set_mousemove_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1415,7 +1420,7 @@ extern "C" {
     pub fn emscripten_set_mouseenter_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1424,7 +1429,7 @@ extern "C" {
     pub fn emscripten_set_mouseleave_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1433,7 +1438,7 @@ extern "C" {
     pub fn emscripten_set_mouseover_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1442,7 +1447,7 @@ extern "C" {
     pub fn emscripten_set_mouseout_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_mouse_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1459,7 +1464,7 @@ pub struct EmscriptenWheelEvent {
     pub deltaX: f64,
     pub deltaY: f64,
     pub deltaZ: f64,
-    pub deltaMode: ::std::os::raw::c_ulong,
+    pub deltaMode: ::std::os::raw::c_uint,
 }
 #[test]
 fn bindgen_test_layout_EmscriptenWheelEvent() {
@@ -1467,7 +1472,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenWheelEvent>(),
-        152usize,
+        96usize,
         concat!("Size of: ", stringify!(EmscriptenWheelEvent))
     );
     assert_eq!(
@@ -1487,7 +1492,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).deltaX) as usize - ptr as usize },
-        120usize,
+        64usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWheelEvent),
@@ -1497,7 +1502,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).deltaY) as usize - ptr as usize },
-        128usize,
+        72usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWheelEvent),
@@ -1507,7 +1512,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).deltaZ) as usize - ptr as usize },
-        136usize,
+        80usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWheelEvent),
@@ -1517,7 +1522,7 @@ fn bindgen_test_layout_EmscriptenWheelEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).deltaMode) as usize - ptr as usize },
-        144usize,
+        88usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWheelEvent),
@@ -1531,13 +1536,13 @@ pub type em_wheel_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         wheelEvent: *const EmscriptenWheelEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_wheel_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_wheel_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1545,7 +1550,7 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct EmscriptenUiEvent {
-    pub detail: ::std::os::raw::c_long,
+    pub detail: ::std::os::raw::c_int,
     pub documentBodyClientWidth: ::std::os::raw::c_int,
     pub documentBodyClientHeight: ::std::os::raw::c_int,
     pub windowInnerWidth: ::std::os::raw::c_int,
@@ -1561,12 +1566,12 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenUiEvent>(),
-        40usize,
+        36usize,
         concat!("Size of: ", stringify!(EmscriptenUiEvent))
     );
     assert_eq!(
         ::std::mem::align_of::<EmscriptenUiEvent>(),
-        8usize,
+        4usize,
         concat!("Alignment of ", stringify!(EmscriptenUiEvent))
     );
     assert_eq!(
@@ -1581,7 +1586,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).documentBodyClientWidth) as usize - ptr as usize },
-        8usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1591,7 +1596,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).documentBodyClientHeight) as usize - ptr as usize },
-        12usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1601,7 +1606,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).windowInnerWidth) as usize - ptr as usize },
-        16usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1611,7 +1616,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).windowInnerHeight) as usize - ptr as usize },
-        20usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1621,7 +1626,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).windowOuterWidth) as usize - ptr as usize },
-        24usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1631,7 +1636,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).windowOuterHeight) as usize - ptr as usize },
-        28usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1641,7 +1646,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).scrollTop) as usize - ptr as usize },
-        32usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1651,7 +1656,7 @@ fn bindgen_test_layout_EmscriptenUiEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).scrollLeft) as usize - ptr as usize },
-        36usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenUiEvent),
@@ -1665,13 +1670,13 @@ pub type em_ui_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         uiEvent: *const EmscriptenUiEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_resize_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_ui_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1680,7 +1685,7 @@ extern "C" {
     pub fn emscripten_set_scroll_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_ui_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1731,13 +1736,13 @@ pub type em_focus_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         focusEvent: *const EmscriptenFocusEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_blur_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_focus_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1746,7 +1751,7 @@ extern "C" {
     pub fn emscripten_set_focus_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_focus_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1755,7 +1760,7 @@ extern "C" {
     pub fn emscripten_set_focusin_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_focus_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1764,7 +1769,7 @@ extern "C" {
     pub fn emscripten_set_focusout_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_focus_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1775,7 +1780,7 @@ pub struct EmscriptenDeviceOrientationEvent {
     pub alpha: f64,
     pub beta: f64,
     pub gamma: f64,
-    pub absolute: ::std::os::raw::c_int,
+    pub absolute: bool,
 }
 #[test]
 fn bindgen_test_layout_EmscriptenDeviceOrientationEvent() {
@@ -1841,12 +1846,12 @@ pub type em_deviceorientation_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         deviceOrientationEvent: *const EmscriptenDeviceOrientationEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_deviceorientation_callback_on_thread(
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_deviceorientation_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -1997,12 +2002,12 @@ pub type em_devicemotion_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         deviceMotionEvent: *const EmscriptenDeviceMotionEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_devicemotion_callback_on_thread(
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_devicemotion_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2062,12 +2067,12 @@ pub type em_orientationchange_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         orientationChangeEvent: *const EmscriptenOrientationChangeEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_orientationchange_callback_on_thread(
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_orientationchange_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2088,8 +2093,8 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct EmscriptenFullscreenChangeEvent {
-    pub isFullscreen: ::std::os::raw::c_int,
-    pub fullscreenEnabled: ::std::os::raw::c_int,
+    pub isFullscreen: bool,
+    pub fullscreenEnabled: bool,
     pub nodeName: [::std::os::raw::c_char; 128usize],
     pub id: [::std::os::raw::c_char; 128usize],
     pub elementWidth: ::std::os::raw::c_int,
@@ -2104,7 +2109,7 @@ fn bindgen_test_layout_EmscriptenFullscreenChangeEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenFullscreenChangeEvent>(),
-        280usize,
+        276usize,
         concat!("Size of: ", stringify!(EmscriptenFullscreenChangeEvent))
     );
     assert_eq!(
@@ -2124,7 +2129,7 @@ fn bindgen_test_layout_EmscriptenFullscreenChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).fullscreenEnabled) as usize - ptr as usize },
-        4usize,
+        1usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenFullscreenChangeEvent),
@@ -2134,7 +2139,7 @@ fn bindgen_test_layout_EmscriptenFullscreenChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).nodeName) as usize - ptr as usize },
-        8usize,
+        2usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenFullscreenChangeEvent),
@@ -2144,7 +2149,7 @@ fn bindgen_test_layout_EmscriptenFullscreenChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).id) as usize - ptr as usize },
-        136usize,
+        130usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenFullscreenChangeEvent),
@@ -2154,7 +2159,7 @@ fn bindgen_test_layout_EmscriptenFullscreenChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).elementWidth) as usize - ptr as usize },
-        264usize,
+        260usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenFullscreenChangeEvent),
@@ -2164,7 +2169,7 @@ fn bindgen_test_layout_EmscriptenFullscreenChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).elementHeight) as usize - ptr as usize },
-        268usize,
+        264usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenFullscreenChangeEvent),
@@ -2174,7 +2179,7 @@ fn bindgen_test_layout_EmscriptenFullscreenChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).screenWidth) as usize - ptr as usize },
-        272usize,
+        268usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenFullscreenChangeEvent),
@@ -2184,7 +2189,7 @@ fn bindgen_test_layout_EmscriptenFullscreenChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).screenHeight) as usize - ptr as usize },
-        276usize,
+        272usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenFullscreenChangeEvent),
@@ -2198,13 +2203,13 @@ pub type em_fullscreenchange_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         fullscreenChangeEvent: *const EmscriptenFullscreenChangeEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_fullscreenchange_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_fullscreenchange_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2219,7 +2224,7 @@ pub type em_canvasresized_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         reserved: *const ::std::os::raw::c_void,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -2314,13 +2319,13 @@ fn bindgen_test_layout_EmscriptenFullscreenStrategy() {
 extern "C" {
     pub fn emscripten_request_fullscreen(
         target: *const ::std::os::raw::c_char,
-        deferUntilInEventHandler: ::std::os::raw::c_int,
+        deferUntilInEventHandler: bool,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn emscripten_request_fullscreen_strategy(
         target: *const ::std::os::raw::c_char,
-        deferUntilInEventHandler: ::std::os::raw::c_int,
+        deferUntilInEventHandler: bool,
         fullscreenStrategy: *const EmscriptenFullscreenStrategy,
     ) -> ::std::os::raw::c_int;
 }
@@ -2339,7 +2344,7 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct EmscriptenPointerlockChangeEvent {
-    pub isActive: ::std::os::raw::c_int,
+    pub isActive: bool,
     pub nodeName: [::std::os::raw::c_char; 128usize],
     pub id: [::std::os::raw::c_char; 128usize],
 }
@@ -2350,12 +2355,12 @@ fn bindgen_test_layout_EmscriptenPointerlockChangeEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenPointerlockChangeEvent>(),
-        260usize,
+        257usize,
         concat!("Size of: ", stringify!(EmscriptenPointerlockChangeEvent))
     );
     assert_eq!(
         ::std::mem::align_of::<EmscriptenPointerlockChangeEvent>(),
-        4usize,
+        1usize,
         concat!(
             "Alignment of ",
             stringify!(EmscriptenPointerlockChangeEvent)
@@ -2373,7 +2378,7 @@ fn bindgen_test_layout_EmscriptenPointerlockChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).nodeName) as usize - ptr as usize },
-        4usize,
+        1usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenPointerlockChangeEvent),
@@ -2383,7 +2388,7 @@ fn bindgen_test_layout_EmscriptenPointerlockChangeEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).id) as usize - ptr as usize },
-        132usize,
+        129usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenPointerlockChangeEvent),
@@ -2397,13 +2402,13 @@ pub type em_pointerlockchange_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         pointerlockChangeEvent: *const EmscriptenPointerlockChangeEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_pointerlockchange_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_pointerlockchange_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2413,13 +2418,13 @@ pub type em_pointerlockerror_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         reserved: *const ::std::os::raw::c_void,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_pointerlockerror_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_pointerlockerror_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2432,7 +2437,7 @@ extern "C" {
 extern "C" {
     pub fn emscripten_request_pointerlock(
         target: *const ::std::os::raw::c_char,
-        deferUntilInEventHandler: ::std::os::raw::c_int,
+        deferUntilInEventHandler: bool,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -2441,7 +2446,7 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct EmscriptenVisibilityChangeEvent {
-    pub hidden: ::std::os::raw::c_int,
+    pub hidden: bool,
     pub visibilityState: ::std::os::raw::c_int,
 }
 #[test]
@@ -2485,12 +2490,12 @@ pub type em_visibilitychange_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         visibilityChangeEvent: *const EmscriptenVisibilityChangeEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_visibilitychange_callback_on_thread(
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_visibilitychange_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2503,19 +2508,19 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct EmscriptenTouchPoint {
-    pub identifier: ::std::os::raw::c_long,
-    pub screenX: ::std::os::raw::c_long,
-    pub screenY: ::std::os::raw::c_long,
-    pub clientX: ::std::os::raw::c_long,
-    pub clientY: ::std::os::raw::c_long,
-    pub pageX: ::std::os::raw::c_long,
-    pub pageY: ::std::os::raw::c_long,
-    pub isChanged: ::std::os::raw::c_int,
-    pub onTarget: ::std::os::raw::c_int,
-    pub targetX: ::std::os::raw::c_long,
-    pub targetY: ::std::os::raw::c_long,
-    pub canvasX: ::std::os::raw::c_long,
-    pub canvasY: ::std::os::raw::c_long,
+    pub identifier: ::std::os::raw::c_int,
+    pub screenX: ::std::os::raw::c_int,
+    pub screenY: ::std::os::raw::c_int,
+    pub clientX: ::std::os::raw::c_int,
+    pub clientY: ::std::os::raw::c_int,
+    pub pageX: ::std::os::raw::c_int,
+    pub pageY: ::std::os::raw::c_int,
+    pub isChanged: bool,
+    pub onTarget: bool,
+    pub targetX: ::std::os::raw::c_int,
+    pub targetY: ::std::os::raw::c_int,
+    pub canvasX: ::std::os::raw::c_int,
+    pub canvasY: ::std::os::raw::c_int,
 }
 #[test]
 fn bindgen_test_layout_EmscriptenTouchPoint() {
@@ -2523,12 +2528,12 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenTouchPoint>(),
-        96usize,
+        48usize,
         concat!("Size of: ", stringify!(EmscriptenTouchPoint))
     );
     assert_eq!(
         ::std::mem::align_of::<EmscriptenTouchPoint>(),
-        8usize,
+        4usize,
         concat!("Alignment of ", stringify!(EmscriptenTouchPoint))
     );
     assert_eq!(
@@ -2543,7 +2548,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).screenX) as usize - ptr as usize },
-        8usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2553,7 +2558,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).screenY) as usize - ptr as usize },
-        16usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2563,7 +2568,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).clientX) as usize - ptr as usize },
-        24usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2573,7 +2578,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).clientY) as usize - ptr as usize },
-        32usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2583,7 +2588,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pageX) as usize - ptr as usize },
-        40usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2593,7 +2598,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pageY) as usize - ptr as usize },
-        48usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2603,7 +2608,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).isChanged) as usize - ptr as usize },
-        56usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2613,7 +2618,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).onTarget) as usize - ptr as usize },
-        60usize,
+        29usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2623,7 +2628,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).targetX) as usize - ptr as usize },
-        64usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2633,7 +2638,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).targetY) as usize - ptr as usize },
-        72usize,
+        36usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2643,7 +2648,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).canvasX) as usize - ptr as usize },
-        80usize,
+        40usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2653,7 +2658,7 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).canvasY) as usize - ptr as usize },
-        88usize,
+        44usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchPoint),
@@ -2667,10 +2672,10 @@ fn bindgen_test_layout_EmscriptenTouchPoint() {
 pub struct EmscriptenTouchEvent {
     pub timestamp: f64,
     pub numTouches: ::std::os::raw::c_int,
-    pub ctrlKey: ::std::os::raw::c_int,
-    pub shiftKey: ::std::os::raw::c_int,
-    pub altKey: ::std::os::raw::c_int,
-    pub metaKey: ::std::os::raw::c_int,
+    pub ctrlKey: bool,
+    pub shiftKey: bool,
+    pub altKey: bool,
+    pub metaKey: bool,
     pub touches: [EmscriptenTouchPoint; 32usize],
 }
 #[test]
@@ -2679,7 +2684,7 @@ fn bindgen_test_layout_EmscriptenTouchEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenTouchEvent>(),
-        3104usize,
+        1552usize,
         concat!("Size of: ", stringify!(EmscriptenTouchEvent))
     );
     assert_eq!(
@@ -2719,7 +2724,7 @@ fn bindgen_test_layout_EmscriptenTouchEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).shiftKey) as usize - ptr as usize },
-        16usize,
+        13usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchEvent),
@@ -2729,7 +2734,7 @@ fn bindgen_test_layout_EmscriptenTouchEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).altKey) as usize - ptr as usize },
-        20usize,
+        14usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchEvent),
@@ -2739,7 +2744,7 @@ fn bindgen_test_layout_EmscriptenTouchEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).metaKey) as usize - ptr as usize },
-        24usize,
+        15usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchEvent),
@@ -2749,7 +2754,7 @@ fn bindgen_test_layout_EmscriptenTouchEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).touches) as usize - ptr as usize },
-        32usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenTouchEvent),
@@ -2763,13 +2768,13 @@ pub type em_touch_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         touchEvent: *const EmscriptenTouchEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_touchstart_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_touch_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2778,7 +2783,7 @@ extern "C" {
     pub fn emscripten_set_touchend_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_touch_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2787,7 +2792,7 @@ extern "C" {
     pub fn emscripten_set_touchmove_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_touch_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2796,7 +2801,7 @@ extern "C" {
     pub fn emscripten_set_touchcancel_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_touch_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2809,9 +2814,9 @@ pub struct EmscriptenGamepadEvent {
     pub numButtons: ::std::os::raw::c_int,
     pub axis: [f64; 64usize],
     pub analogButton: [f64; 64usize],
-    pub digitalButton: [::std::os::raw::c_int; 64usize],
-    pub connected: ::std::os::raw::c_int,
-    pub index: ::std::os::raw::c_long,
+    pub digitalButton: [bool; 64usize],
+    pub connected: bool,
+    pub index: ::std::os::raw::c_int,
     pub id: [::std::os::raw::c_char; 64usize],
     pub mapping: [::std::os::raw::c_char; 64usize],
 }
@@ -2822,7 +2827,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenGamepadEvent>(),
-        1440usize,
+        1240usize,
         concat!("Size of: ", stringify!(EmscriptenGamepadEvent))
     );
     assert_eq!(
@@ -2892,7 +2897,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).connected) as usize - ptr as usize },
-        1296usize,
+        1104usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenGamepadEvent),
@@ -2902,7 +2907,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).index) as usize - ptr as usize },
-        1304usize,
+        1108usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenGamepadEvent),
@@ -2912,7 +2917,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).id) as usize - ptr as usize },
-        1312usize,
+        1112usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenGamepadEvent),
@@ -2922,7 +2927,7 @@ fn bindgen_test_layout_EmscriptenGamepadEvent() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).mapping) as usize - ptr as usize },
-        1376usize,
+        1176usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenGamepadEvent),
@@ -2936,12 +2941,12 @@ pub type em_gamepad_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         gamepadEvent: *const EmscriptenGamepadEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_gamepadconnected_callback_on_thread(
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_gamepad_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2949,7 +2954,7 @@ extern "C" {
 extern "C" {
     pub fn emscripten_set_gamepaddisconnected_callback_on_thread(
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_gamepad_callback_func,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -2972,7 +2977,7 @@ pub struct EmscriptenBatteryEvent {
     pub chargingTime: f64,
     pub dischargingTime: f64,
     pub level: f64,
-    pub charging: ::std::os::raw::c_int,
+    pub charging: bool,
 }
 #[test]
 fn bindgen_test_layout_EmscriptenBatteryEvent() {
@@ -3035,7 +3040,7 @@ pub type em_battery_callback_func = ::std::option::Option<
         eventType: ::std::os::raw::c_int,
         batteryEvent: *const EmscriptenBatteryEvent,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_batterychargingchange_callback_on_thread(
@@ -3113,10 +3118,7 @@ extern "C" {
 extern "C" {
     pub fn emscripten_request_animation_frame(
         cb: ::std::option::Option<
-            unsafe extern "C" fn(
-                time: f64,
-                userData: *mut ::std::os::raw::c_void,
-            ) -> ::std::os::raw::c_int,
+            unsafe extern "C" fn(time: f64, userData: *mut ::std::os::raw::c_void) -> bool,
         >,
         userData: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
@@ -3127,10 +3129,7 @@ extern "C" {
 extern "C" {
     pub fn emscripten_request_animation_frame_loop(
         cb: ::std::option::Option<
-            unsafe extern "C" fn(
-                time: f64,
-                userData: *mut ::std::os::raw::c_void,
-            ) -> ::std::os::raw::c_int,
+            unsafe extern "C" fn(time: f64, userData: *mut ::std::os::raw::c_void) -> bool,
         >,
         userData: *mut ::std::os::raw::c_void,
     );
@@ -3141,26 +3140,26 @@ extern "C" {
 extern "C" {
     pub fn emscripten_performance_now() -> f64;
 }
-pub type EMSCRIPTEN_WEBGL_CONTEXT_HANDLE = ::std::os::raw::c_int;
+pub type EMSCRIPTEN_WEBGL_CONTEXT_HANDLE = usize;
 pub type EMSCRIPTEN_WEBGL_CONTEXT_PROXY_MODE = ::std::os::raw::c_int;
 pub type EM_WEBGL_POWER_PREFERENCE = ::std::os::raw::c_int;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct EmscriptenWebGLContextAttributes {
-    pub alpha: ::std::os::raw::c_int,
-    pub depth: ::std::os::raw::c_int,
-    pub stencil: ::std::os::raw::c_int,
-    pub antialias: ::std::os::raw::c_int,
-    pub premultipliedAlpha: ::std::os::raw::c_int,
-    pub preserveDrawingBuffer: ::std::os::raw::c_int,
+    pub alpha: bool,
+    pub depth: bool,
+    pub stencil: bool,
+    pub antialias: bool,
+    pub premultipliedAlpha: bool,
+    pub preserveDrawingBuffer: bool,
     pub powerPreference: EM_WEBGL_POWER_PREFERENCE,
-    pub failIfMajorPerformanceCaveat: ::std::os::raw::c_int,
+    pub failIfMajorPerformanceCaveat: bool,
     pub majorVersion: ::std::os::raw::c_int,
     pub minorVersion: ::std::os::raw::c_int,
-    pub enableExtensionsByDefault: ::std::os::raw::c_int,
-    pub explicitSwapControl: ::std::os::raw::c_int,
+    pub enableExtensionsByDefault: bool,
+    pub explicitSwapControl: bool,
     pub proxyContextToMainThread: EMSCRIPTEN_WEBGL_CONTEXT_PROXY_MODE,
-    pub renderViaOffscreenBackBuffer: ::std::os::raw::c_int,
+    pub renderViaOffscreenBackBuffer: bool,
 }
 #[test]
 fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
@@ -3169,7 +3168,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<EmscriptenWebGLContextAttributes>(),
-        56usize,
+        36usize,
         concat!("Size of: ", stringify!(EmscriptenWebGLContextAttributes))
     );
     assert_eq!(
@@ -3192,7 +3191,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).depth) as usize - ptr as usize },
-        4usize,
+        1usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3202,7 +3201,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).stencil) as usize - ptr as usize },
-        8usize,
+        2usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3212,7 +3211,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).antialias) as usize - ptr as usize },
-        12usize,
+        3usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3222,7 +3221,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).premultipliedAlpha) as usize - ptr as usize },
-        16usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3232,7 +3231,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).preserveDrawingBuffer) as usize - ptr as usize },
-        20usize,
+        5usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3242,7 +3241,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).powerPreference) as usize - ptr as usize },
-        24usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3254,7 +3253,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
         unsafe {
             ::std::ptr::addr_of!((*ptr).failIfMajorPerformanceCaveat) as usize - ptr as usize
         },
-        28usize,
+        12usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3264,7 +3263,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).majorVersion) as usize - ptr as usize },
-        32usize,
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3274,7 +3273,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).minorVersion) as usize - ptr as usize },
-        36usize,
+        20usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3284,7 +3283,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).enableExtensionsByDefault) as usize - ptr as usize },
-        40usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3294,7 +3293,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).explicitSwapControl) as usize - ptr as usize },
-        44usize,
+        25usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3304,7 +3303,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).proxyContextToMainThread) as usize - ptr as usize },
-        48usize,
+        28usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3316,7 +3315,7 @@ fn bindgen_test_layout_EmscriptenWebGLContextAttributes() {
         unsafe {
             ::std::ptr::addr_of!((*ptr).renderViaOffscreenBackBuffer) as usize - ptr as usize
         },
-        52usize,
+        32usize,
         concat!(
             "Offset of field: ",
             stringify!(EmscriptenWebGLContextAttributes),
@@ -3366,50 +3365,50 @@ extern "C" {
     pub fn emscripten_webgl_enable_extension(
         context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
         extension: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
+    ) -> bool;
 }
 extern "C" {
     pub fn emscripten_webgl_enable_ANGLE_instanced_arrays(
         context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
-    ) -> ::std::os::raw::c_int;
+    ) -> bool;
 }
 extern "C" {
     pub fn emscripten_webgl_enable_OES_vertex_array_object(
         context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
-    ) -> ::std::os::raw::c_int;
+    ) -> bool;
 }
 extern "C" {
     pub fn emscripten_webgl_enable_WEBGL_draw_buffers(
         context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
-    ) -> ::std::os::raw::c_int;
+    ) -> bool;
 }
 extern "C" {
     pub fn emscripten_webgl_enable_WEBGL_draw_instanced_base_vertex_base_instance(
         context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
-    ) -> ::std::os::raw::c_int;
+    ) -> bool;
 }
 extern "C" {
     pub fn emscripten_webgl_enable_WEBGL_multi_draw(
         context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
-    ) -> ::std::os::raw::c_int;
+    ) -> bool;
 }
 extern "C" {
     pub fn emscripten_webgl_enable_WEBGL_multi_draw_instanced_base_vertex_base_instance(
         context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
-    ) -> ::std::os::raw::c_int;
+    ) -> bool;
 }
 pub type em_webgl_context_callback = ::std::option::Option<
     unsafe extern "C" fn(
         eventType: ::std::os::raw::c_int,
         reserved: *const ::std::os::raw::c_void,
         userData: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int,
+    ) -> bool,
 >;
 extern "C" {
     pub fn emscripten_set_webglcontextlost_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_webgl_context_callback,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
@@ -3418,21 +3417,19 @@ extern "C" {
     pub fn emscripten_set_webglcontextrestored_callback_on_thread(
         target: *const ::std::os::raw::c_char,
         userData: *mut ::std::os::raw::c_void,
-        useCapture: ::std::os::raw::c_int,
+        useCapture: bool,
         callback: em_webgl_context_callback,
         targetThread: pthread_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn emscripten_is_webgl_context_lost(
-        context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
-    ) -> ::std::os::raw::c_int;
+    pub fn emscripten_is_webgl_context_lost(context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE) -> bool;
 }
 extern "C" {
     pub fn emscripten_webgl_commit_frame() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn emscripten_supports_offscreencanvas() -> ::std::os::raw::c_int;
+    pub fn emscripten_supports_offscreencanvas() -> bool;
 }
 extern "C" {
     pub fn emscripten_webgl1_get_proc_address(
