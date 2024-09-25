@@ -15,7 +15,7 @@ pub const EMSCRIPTEN_RESULT_TIMED_OUT: i32 = -8;
 pub const LONG_CODE: u8 = 105u8;
 pub const __EMSCRIPTEN_major__: u32 = 3;
 pub const __EMSCRIPTEN_minor__: u32 = 1;
-pub const __EMSCRIPTEN_tiny__: u32 = 63;
+pub const __EMSCRIPTEN_tiny__: u32 = 67;
 pub const EM_TIMING_SETTIMEOUT: u32 = 0;
 pub const EM_TIMING_RAF: u32 = 1;
 pub const EM_TIMING_SETIMMEDIATE: u32 = 2;
@@ -421,7 +421,7 @@ extern "C" {
     pub fn emscripten_set_main_loop(
         func: em_callback_func,
         fps: ::std::os::raw::c_int,
-        simulate_infinite_loop: ::std::os::raw::c_int,
+        simulate_infinite_loop: bool,
     );
 }
 extern "C" {
@@ -441,7 +441,7 @@ extern "C" {
         func: em_arg_callback_func,
         arg: *mut ::std::os::raw::c_void,
         fps: ::std::os::raw::c_int,
-        simulate_infinite_loop: ::std::os::raw::c_int,
+        simulate_infinite_loop: bool,
     );
 }
 extern "C" {
@@ -808,8 +808,8 @@ extern "C" {
 }
 pub type em_dlopen_callback = ::std::option::Option<
     unsafe extern "C" fn(
-        handle: *mut ::std::os::raw::c_void,
         user_data: *mut ::std::os::raw::c_void,
+        handle: *mut ::std::os::raw::c_void,
     ),
 >;
 extern "C" {
@@ -904,6 +904,9 @@ extern "C" {
     pub fn emscripten_console_error(utf8String: *const ::std::os::raw::c_char);
 }
 extern "C" {
+    pub fn emscripten_console_trace(utf8String: *const ::std::os::raw::c_char);
+}
+extern "C" {
     pub fn emscripten_out(utf8String: *const ::std::os::raw::c_char);
 }
 extern "C" {
@@ -911,6 +914,9 @@ extern "C" {
 }
 extern "C" {
     pub fn emscripten_dbg(utf8String: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn emscripten_dbg_backtrace(utf8String: *const ::std::os::raw::c_char);
 }
 extern "C" {
     pub fn emscripten_outn(utf8String: *const ::std::os::raw::c_char, len: usize);
@@ -931,6 +937,9 @@ extern "C" {
     pub fn emscripten_console_errorf(format: *const ::std::os::raw::c_char, ...);
 }
 extern "C" {
+    pub fn emscripten_console_tracef(format: *const ::std::os::raw::c_char, ...);
+}
+extern "C" {
     pub fn emscripten_outf(format: *const ::std::os::raw::c_char, ...);
 }
 extern "C" {
@@ -938,6 +947,9 @@ extern "C" {
 }
 extern "C" {
     pub fn emscripten_dbgf(format: *const ::std::os::raw::c_char, ...);
+}
+extern "C" {
+    pub fn emscripten_dbg_backtracef(format: *const ::std::os::raw::c_char, ...);
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -3394,6 +3406,21 @@ extern "C" {
 }
 extern "C" {
     pub fn emscripten_webgl_enable_WEBGL_multi_draw_instanced_base_vertex_base_instance(
+        context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
+    ) -> bool;
+}
+extern "C" {
+    pub fn emscripten_webgl_enable_EXT_polygon_offset_clamp(
+        context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
+    ) -> bool;
+}
+extern "C" {
+    pub fn emscripten_webgl_enable_EXT_clip_control(
+        context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
+    ) -> bool;
+}
+extern "C" {
+    pub fn emscripten_webgl_enable_WEBGL_polygon_mode(
         context: EMSCRIPTEN_WEBGL_CONTEXT_HANDLE,
     ) -> bool;
 }

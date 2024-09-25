@@ -15,7 +15,7 @@ pub const EMSCRIPTEN_RESULT_NO_DATA: i32 = -7;
 pub const EMSCRIPTEN_RESULT_TIMED_OUT: i32 = -8;
 pub const __EMSCRIPTEN_major__: u32 = 3;
 pub const __EMSCRIPTEN_minor__: u32 = 1;
-pub const __EMSCRIPTEN_tiny__: u32 = 63;
+pub const __EMSCRIPTEN_tiny__: u32 = 67;
 pub const EM_TIMING_SETTIMEOUT: u32 = 0;
 pub const EM_TIMING_RAF: u32 = 1;
 pub const EM_TIMING_SETIMMEDIATE: u32 = 2;
@@ -336,7 +336,7 @@ extern "C" {
     pub fn emscripten_set_main_loop(
         func: em_callback_func,
         fps: ::std::os::raw::c_int,
-        simulate_infinite_loop: ::std::os::raw::c_int,
+        simulate_infinite_loop: bool,
     );
 }
 extern "C" {
@@ -356,7 +356,7 @@ extern "C" {
         func: em_arg_callback_func,
         arg: *mut ::std::os::raw::c_void,
         fps: ::std::os::raw::c_int,
-        simulate_infinite_loop: ::std::os::raw::c_int,
+        simulate_infinite_loop: bool,
     );
 }
 extern "C" {
@@ -723,8 +723,8 @@ extern "C" {
 }
 pub type em_dlopen_callback = ::std::option::Option<
     unsafe extern "C" fn(
-        handle: *mut ::std::os::raw::c_void,
         user_data: *mut ::std::os::raw::c_void,
+        handle: *mut ::std::os::raw::c_void,
     ),
 >;
 extern "C" {

@@ -10,6 +10,9 @@ extern "C" {
     pub fn emscripten_console_error(utf8String: *const ::std::os::raw::c_char);
 }
 extern "C" {
+    pub fn emscripten_console_trace(utf8String: *const ::std::os::raw::c_char);
+}
+extern "C" {
     pub fn emscripten_out(utf8String: *const ::std::os::raw::c_char);
 }
 extern "C" {
@@ -17,6 +20,9 @@ extern "C" {
 }
 extern "C" {
     pub fn emscripten_dbg(utf8String: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn emscripten_dbg_backtrace(utf8String: *const ::std::os::raw::c_char);
 }
 extern "C" {
     pub fn emscripten_outn(utf8String: *const ::std::os::raw::c_char, len: usize);
@@ -37,6 +43,9 @@ extern "C" {
     pub fn emscripten_console_errorf(format: *const ::std::os::raw::c_char, ...);
 }
 extern "C" {
+    pub fn emscripten_console_tracef(format: *const ::std::os::raw::c_char, ...);
+}
+extern "C" {
     pub fn emscripten_outf(format: *const ::std::os::raw::c_char, ...);
 }
 extern "C" {
@@ -44,4 +53,7 @@ extern "C" {
 }
 extern "C" {
     pub fn emscripten_dbgf(format: *const ::std::os::raw::c_char, ...);
+}
+extern "C" {
+    pub fn emscripten_dbg_backtracef(format: *const ::std::os::raw::c_char, ...);
 }
