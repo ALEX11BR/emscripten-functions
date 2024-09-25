@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Loading...</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+
+            display: grid;
+            place-items: center;
+        }
+        #canvas {
+            /* The emscripten runtime sets the width and height of the canvas to match whatever is set in the CSS: https://github.com/emscripten-core/emscripten/issues/3206#issuecomment-686241695 */
+            width: 100vw;
+            height: 100vh;
+        }
+        #loading-display {
+            padding: 0;
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+
+            position: fixed;
+            background-color: transparent;
+
+            display: grid;
+            place-items: center;
+        }
+        #loading-square {
+            width: 10px;
+            height: 10px;
+
+            background-color: black;
+
+            animation: loading-animation 2s infinite;
+        }
+        @keyframes loading-animation {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(5);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <div id="loading-display">
+        <div id="loading-square"></div>
+    </div>
+
+    <script>
+        let canvas = document.getElementById("canvas")
+        canvas.addEventListener("webglcontextlost", (e) => {
+            e.preventDefault()
+        })
+
+        var Module = {
+            canvas,
+            setStatus: (status) => {
+                if (status === "Running...") {
+                    document.getElementById("loading-display").remove();
+                }
+            },
+            monitorRunDependencies: (depsLeft) => {
+                let loadingSquare = document.getElementById("loading-square")
+                loadingSquare.style.backgroundColor = "#00" + ((4 - depsLeft) * 63).toString(16) + "00"
+            },
+        }
+    </script>
+    {{{ SCRIPT }}}
+</body>
+</html>

@@ -1,0 +1,16 @@
+[package]
+name = "simple-game"
+version = "0.1.0"
+edition = "2021"
+
+# We optimize the release for size - quite important for the web version.
+[profile.release]
+opt-level = "s" # "z" doesn't work with the emscripten compiler
+lto = true
+panic = "abort"
+
+[dependencies]
+sdl2 = { version = "0.37.0", features = ["unsafe_textures", "image"] }
+
+[target.'cfg(target_os = "emscripten")'.dependencies]
+emscripten-functions = { version = "0.2.1", path = "../../emscripten-functions" }

@@ -4,3 +4,6 @@ members = [
     "emscripten-functions-sys",
     "emscripten-functions",
 ]
+exclude = [
+    "examples/simple_game",
+]
