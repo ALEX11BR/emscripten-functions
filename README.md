@@ -78,7 +78,7 @@ run_script(
     format!(
         r##"
             document.querySelector("#this-is-secure").innerHTML = "{}"
-        "##, 
+        "##,
         "untrusted user input".escape_unicode()
     )
 );
@@ -113,3 +113,7 @@ set_main_loop_with_arg(|data| {
     println!("Score {}, level {}", data.score, data.level);
 }, game_data, 0, true);
 ```
+
+### An SDL game example
+
+An SDL game example that has image handling can be found in [`examples/simple-game`](examples/simple-game).

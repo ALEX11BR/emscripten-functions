@@ -1,4 +1,5 @@
 # emscripten-functions-sys
+[![crates.io badge](https://img.shields.io/crates/v/emscripten-functions-sys.svg)](https://crates.io/crates/emscripten-functions-sys)
 
 This crate contains bindgen-generated bindings for the system emscripten functions, as presented in [their API reference](https://emscripten.org/docs/api_reference/index.html).
 The following headers have bindings available:

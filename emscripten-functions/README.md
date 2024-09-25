@@ -1,4 +1,5 @@
 # emscripten-functions
+[![crates.io badge](https://img.shields.io/crates/v/emscripten-functions.svg)](https://crates.io/crates/emscripten-functions)
 
 This crate contains various emscripten system functions (made with rust-native parameter and return value types) that make programming in rust for emscripten targets easier.
 Functions based on ones from the following emscripten headers are available:
@@ -54,3 +55,7 @@ set_main_loop_with_arg(|data| {
     println!("Score {}, level {}", data.score, data.level);
 }, game_data, 0, true);
 ```
+
+### An SDL game example
+
+An SDL game example that has image handling can be found [here](../examples/simple-game).
