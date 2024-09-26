@@ -89,7 +89,7 @@ pub fn set_main_loop_with_arg<F, T>(
     }
 
     unsafe {
-        emscripten::emscripten_set_main_loop(Some(wrapper_func), fps, simulate_infinite_loop as i32)
+        emscripten::emscripten_set_main_loop(Some(wrapper_func), fps, simulate_infinite_loop)
     };
 }
 

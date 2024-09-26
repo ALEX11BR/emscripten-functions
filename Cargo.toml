@@ -5,5 +5,5 @@ members = [
     "emscripten-functions",
 ]
 exclude = [
-    "examples/simple_game",
+    "examples/simple-game",
 ]
