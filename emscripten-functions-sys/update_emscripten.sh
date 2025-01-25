@@ -14,6 +14,7 @@ if [ -z "$DOCKER" ]; then
     exit 1
 fi
 
-ID=$("$DOCKER" create docker.io/emscripten/emsdk)
+"$DOCKER" pull emscripten/emsdk:latest
+ID=$("$DOCKER" create emscripten/emsdk:latest)
 "$DOCKER" cp "$ID:/emsdk/upstream/emscripten/cache/sysroot/include/." emscripten/cache/sysroot/include/
 "$DOCKER" rm "$ID"

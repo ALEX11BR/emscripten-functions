@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "emscripten-functions"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "cc",
  "emscripten-functions-sys",
@@ -21,7 +21,7 @@ dependencies = [
 
 [[package]]
 name = "emscripten-functions-sys"
-version = "4.1.67"
+version = "4.1.401"
 
 [[package]]
 name = "libc"
