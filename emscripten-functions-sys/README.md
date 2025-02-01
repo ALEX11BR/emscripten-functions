@@ -6,6 +6,7 @@ The following headers have bindings available:
 - `emscripten`
 - `html5`
 - `console`
+- `websocket`
 
 ## A little description of the files in this project
 

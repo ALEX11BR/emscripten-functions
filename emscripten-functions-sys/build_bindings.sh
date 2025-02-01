@@ -9,3 +9,4 @@ build_binding() {
 build_binding "emscripten"
 build_binding "html5"
 build_binding "console"
+build_binding "websocket"

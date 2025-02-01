@@ -1,6 +1,6 @@
 [package]
 name = "emscripten-functions"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 license = "MIT"
 description = "Rust-friendly bindings to various emscripten system functions"
@@ -10,7 +10,7 @@ keywords = ["emscripten", "bindings"]
 categories = ["api-bindings", "wasm"]
 
 [dependencies]
-emscripten-functions-sys = { path = "../emscripten-functions-sys", version = "4.1.401" }
+emscripten-functions-sys = { path = "../emscripten-functions-sys", version = "5.0.401" }
 
 [build-dependencies]
 cc = "1.0.83"

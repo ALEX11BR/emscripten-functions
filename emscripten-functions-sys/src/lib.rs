@@ -9,3 +9,4 @@
 pub mod console;
 pub mod emscripten;
 pub mod html5;
+pub mod websocket;

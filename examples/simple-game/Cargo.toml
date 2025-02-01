@@ -13,4 +13,4 @@ panic = "abort"
 sdl2 = { version = "0.37.0", features = ["unsafe_textures", "image"] }
 
 [target.'cfg(target_os = "emscripten")'.dependencies]
-emscripten-functions = { version = "0.2.4", path = "../../emscripten-functions" }
+emscripten-functions = { version = "0.2.5", path = "../../emscripten-functions" }
