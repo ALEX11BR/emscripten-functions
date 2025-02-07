@@ -181,4 +181,29 @@ impl WebSocket {
     pub fn set_message_callback(&mut self, cb: Option<fn(&mut Self, WebSocketData)>) {
         self.message_cb = cb;
     }
+
+    pub fn send_utf8_text(&mut self, str: &str) -> bool {
+        if self.state == WebSocketState::Opened {
+            let text_cstr = CString::new(str).unwrap();
+            unsafe {
+                emscripten_websocket_send_utf8_text(self.id, text_cstr.as_ptr());
+            }
+
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn send_binary(&mut self, data: &mut [u8]) -> bool {
+        if self.state == WebSocketState::Opened {
+            unsafe {
+                emscripten_websocket_send_binary(self.id, data.as_mut_ptr() as *mut std::os::raw::c_void, data.len() as u32);
+            }
+
+            true
+        } else {
+            false
+        }
+    }
 }
