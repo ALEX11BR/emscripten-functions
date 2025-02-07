@@ -12,12 +12,19 @@ pub enum WebSocketState {
     Error,
 }
 
+pub enum WebSocketData {
+    Text(String),
+    RawBuffer(Vec<u8>)
+}
+
 pub struct WebSocket {
     id: i32,
     state: WebSocketState,
 
     open_cb: Option<fn(&mut Self)>,
     error_cb: Option<fn(&mut Self)>,
+    close_cb: Option<fn(&mut Self)>,
+    message_cb: Option<fn(&mut Self, WebSocketData)>,
 }
 
 unsafe extern "C" fn on_open_callback(
@@ -49,6 +56,40 @@ unsafe extern "C" fn on_error_callback(
     true
 }
 
+unsafe extern "C" fn on_close_callback(
+    _event_type: ::std::os::raw::c_int,
+    _websocket_event: *const EmscriptenWebSocketCloseEvent,
+    user_data: *mut ::std::os::raw::c_void,
+) -> bool {
+    let ws: &mut WebSocket = &mut *(user_data as *mut WebSocket);
+    ws.state = WebSocketState::Closed;
+
+    println!("WebSocket CLOSE, CODE: {}, ID : {}", (*_websocket_event).code, ws.id);
+
+    true
+}
+
+unsafe extern "C" fn on_message_callback(
+    _event_type: ::std::os::raw::c_int,
+    websocket_event: *const EmscriptenWebSocketMessageEvent,
+    user_data: *mut ::std::os::raw::c_void,
+) -> bool {
+    let ws: &mut WebSocket = &mut *(user_data as *mut WebSocket);
+    println!("WebSocket MESSAGE ID : {}", ws.id);
+    if ws.message_cb.is_none() { return true; }
+
+    let fn_cb = ws.message_cb.unwrap();
+    if (*websocket_event).isText {
+        let tmp_vec = Vec::from_raw_parts((*websocket_event).data, (*websocket_event).numBytes as usize, (*websocket_event).numBytes as usize);
+        (fn_cb)(ws, WebSocketData::Text(String::from_utf8(tmp_vec).unwrap()));
+    } else {
+        let tmp_vec = Vec::from_raw_parts((*websocket_event).data, (*websocket_event).numBytes as usize, (*websocket_event).numBytes as usize);
+        (fn_cb)(ws, WebSocketData::RawBuffer(tmp_vec));
+    }
+
+    true
+}
+
 impl WebSocket {
     pub fn new() -> Option<WebSocket> {
         if unsafe { emscripten_websocket_is_supported() } {
@@ -57,6 +98,8 @@ impl WebSocket {
                 state: WebSocketState::Closed,
                 open_cb: None,
                 error_cb: None,
+                close_cb: None,
+                message_cb: None
             })
         } else {
             None
@@ -111,6 +154,18 @@ impl WebSocket {
                 Some(on_error_callback),
                 EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
             );
+            emscripten_websocket_set_onclose_callback_on_thread(
+                self.id,
+                self as *mut _ as *mut std::os::raw::c_void,
+                Some(on_close_callback),
+                EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
+            );
+            emscripten_websocket_set_onmessage_callback_on_thread(
+                self.id,
+                self as *mut _ as *mut std::os::raw::c_void,
+                Some(on_message_callback),
+                EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
+            );
         }
     }
 
@@ -119,5 +174,11 @@ impl WebSocket {
     }
     pub fn set_error_callback(&mut self, cb: Option<fn(&mut Self)>) {
         self.error_cb = cb;
+    }
+    pub fn set_close_callback(&mut self, cb: Option<fn(&mut Self)>) {
+        self.close_cb = cb;
+    }
+    pub fn set_message_callback(&mut self, cb: Option<fn(&mut Self, WebSocketData)>) {
+        self.message_cb = cb;
     }
 }
