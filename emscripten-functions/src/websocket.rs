@@ -1,20 +1,22 @@
 use emscripten_functions_sys::websocket::*;
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 
 // NOTE: Need to add EMCC_CFLAGS="[...] -lwebsocket.js" before cargo build --target=wasm32-unknown-emscripten to prevent javascript linking error
+
 pub const EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD: pthread_t = 0x2 as *mut __pthread;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum WebSocketState {
-    WaitingToOpen,
+    Connecting,
     Opened,
+    Closing,
     Closed,
     Error,
 }
 
 pub enum WebSocketData {
     Text(String),
-    RawBuffer(Vec<u8>)
+    RawBuffer(Vec<u8>),
 }
 
 pub struct WebSocket {
@@ -38,7 +40,7 @@ unsafe extern "C" fn on_open_callback(
     println!("WebSocket OPEN, ID : {}", ws.id);
     if let Some(fn_cb) = ws.open_cb {
         (fn_cb)(ws);
-    } 
+    }
 
     true
 }
@@ -50,6 +52,7 @@ unsafe extern "C" fn on_error_callback(
 ) -> bool {
     let ws: &mut WebSocket = &mut *(user_data as *mut WebSocket);
     ws.state = WebSocketState::Error;
+    ws.clear_internal_callback();
 
     println!("WebSocket ERROR, ID : {}", ws.id);
 
@@ -63,8 +66,13 @@ unsafe extern "C" fn on_close_callback(
 ) -> bool {
     let ws: &mut WebSocket = &mut *(user_data as *mut WebSocket);
     ws.state = WebSocketState::Closed;
+    ws.clear_internal_callback();
 
-    println!("WebSocket CLOSE, CODE: {}, ID : {}", (*_websocket_event).code, ws.id);
+    println!(
+        "WebSocket CLOSE, CODE: {}, ID : {}",
+        (*_websocket_event).code,
+        ws.id
+    );
 
     true
 }
@@ -76,14 +84,24 @@ unsafe extern "C" fn on_message_callback(
 ) -> bool {
     let ws: &mut WebSocket = &mut *(user_data as *mut WebSocket);
     println!("WebSocket MESSAGE ID : {}", ws.id);
-    if ws.message_cb.is_none() { return true; }
+    if ws.message_cb.is_none() {
+        return true;
+    }
 
     let fn_cb = ws.message_cb.unwrap();
     if (*websocket_event).isText {
-        let tmp_vec = Vec::from_raw_parts((*websocket_event).data, (*websocket_event).numBytes as usize, (*websocket_event).numBytes as usize);
+        let tmp_vec = Vec::from_raw_parts(
+            (*websocket_event).data,
+            (*websocket_event).numBytes as usize,
+            (*websocket_event).numBytes as usize,
+        );
         (fn_cb)(ws, WebSocketData::Text(String::from_utf8(tmp_vec).unwrap()));
     } else {
-        let tmp_vec = Vec::from_raw_parts((*websocket_event).data, (*websocket_event).numBytes as usize, (*websocket_event).numBytes as usize);
+        let tmp_vec = Vec::from_raw_parts(
+            (*websocket_event).data,
+            (*websocket_event).numBytes as usize,
+            (*websocket_event).numBytes as usize,
+        );
         (fn_cb)(ws, WebSocketData::RawBuffer(tmp_vec));
     }
 
@@ -99,7 +117,7 @@ impl WebSocket {
                 open_cb: None,
                 error_cb: None,
                 close_cb: None,
-                message_cb: None
+                message_cb: None,
             })
         } else {
             None
@@ -121,7 +139,7 @@ impl WebSocket {
         let socket: i32 = unsafe { emscripten_websocket_new(&mut create_attr) };
         if socket > 0 {
             self.id = socket;
-            self.state = WebSocketState::WaitingToOpen;
+            self.state = WebSocketState::Connecting;
             self.init_internal_callback();
 
             true
@@ -138,6 +156,34 @@ impl WebSocket {
     }
     pub fn get_state(&self) -> WebSocketState {
         self.state
+    }
+    pub fn get_buffered_amount(&self) -> usize {
+        let mut size: usize = 0;
+        unsafe {
+            emscripten_websocket_get_buffered_amount(self.id, &mut size);
+        }
+
+        size
+    }
+    pub fn get_url(&self) -> String {
+        let mut size: i32 = 0;
+        unsafe {
+            emscripten_websocket_get_url_length(self.id, &mut size);
+            let mut url_raw = vec![0u8; size as usize];
+            let url_raw_ptr = url_raw.as_mut_ptr() as *mut i8;
+            emscripten_websocket_get_url(self.id, url_raw_ptr, 26);
+            String::from_utf8(url_raw).unwrap()
+        }
+    }
+    pub fn get_protocol(&self) -> String {
+        let mut size: i32 = 0;
+        unsafe {
+            emscripten_websocket_get_protocol_length(self.id, &mut size);
+            let mut protocol_raw = vec![0u8; size as usize];
+            let protocol_raw_ptr = protocol_raw.as_mut_ptr() as *mut i8;
+            emscripten_websocket_get_protocol(self.id, protocol_raw_ptr, 26);
+            String::from_utf8(protocol_raw).unwrap()
+        }
     }
 
     fn init_internal_callback(&mut self) {
@@ -164,6 +210,34 @@ impl WebSocket {
                 self.id,
                 self as *mut _ as *mut std::os::raw::c_void,
                 Some(on_message_callback),
+                EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
+            );
+        }
+    }
+    pub fn clear_internal_callback(&mut self) {
+        unsafe {
+            emscripten_websocket_set_onopen_callback_on_thread(
+                self.id,
+                std::ptr::null_mut::<std::os::raw::c_void>(),
+                None,
+                EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
+            );
+            emscripten_websocket_set_onerror_callback_on_thread(
+                self.id,
+                std::ptr::null_mut::<std::os::raw::c_void>(),
+                None,
+                EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
+            );
+            emscripten_websocket_set_onclose_callback_on_thread(
+                self.id,
+                std::ptr::null_mut::<std::os::raw::c_void>(),
+                None,
+                EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
+            );
+            emscripten_websocket_set_onmessage_callback_on_thread(
+                self.id,
+                std::ptr::null_mut::<std::os::raw::c_void>(),
+                None,
                 EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
             );
         }
@@ -198,12 +272,32 @@ impl WebSocket {
     pub fn send_binary(&mut self, data: &mut [u8]) -> bool {
         if self.state == WebSocketState::Opened {
             unsafe {
-                emscripten_websocket_send_binary(self.id, data.as_mut_ptr() as *mut std::os::raw::c_void, data.len() as u32);
+                emscripten_websocket_send_binary(
+                    self.id,
+                    data.as_mut_ptr() as *mut std::os::raw::c_void,
+                    data.len() as u32,
+                );
             }
 
             true
         } else {
             false
+        }
+    }
+
+    pub fn close(&mut self, code: u16, reason: &str) {
+        self.state = WebSocketState::Closing;
+        let reason_cstr = CString::new(reason).unwrap();
+        unsafe {
+            emscripten_websocket_close(self.id, code, reason_cstr.as_ptr());
+        }
+    }
+}
+
+impl Drop for WebSocket {
+    fn drop(&mut self) {
+        unsafe {
+            emscripten_websocket_delete(self.id);
         }
     }
 }
