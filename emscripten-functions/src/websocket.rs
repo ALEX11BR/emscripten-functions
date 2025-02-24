@@ -55,6 +55,9 @@ unsafe extern "C" fn on_error_callback(
     ws.clear_internal_callback();
 
     println!("WebSocket ERROR, ID : {}", ws.id);
+    if let Some(fn_cb) = ws.error_cb {
+        (fn_cb)(ws);
+    }
 
     true
 }
@@ -73,6 +76,9 @@ unsafe extern "C" fn on_close_callback(
         (*_websocket_event).code,
         ws.id
     );
+    if let Some(fn_cb) = ws.close_cb {
+        (fn_cb)(ws);
+    }
 
     true
 }
@@ -109,6 +115,13 @@ unsafe extern "C" fn on_message_callback(
 }
 
 impl WebSocket {
+    /// Create a new WebSocket handler object. One object should be created by socket.
+    ///
+    /// # Examples
+    /// ```rust
+    /// let mut ws = WebSocket::new();
+    /// ws.connect("wss://echo.websocket.org/");
+    /// ```
     pub fn new() -> Option<WebSocket> {
         if unsafe { emscripten_websocket_is_supported() } {
             Some(WebSocket {
@@ -124,6 +137,15 @@ impl WebSocket {
         }
     }
 
+    /// The connect method open a socket connection to the provided URL. This method should only be
+    /// call if the current state of the handler is Closed, else the function will do nothing and
+    /// return false.
+    ///
+    /// # Examples
+    /// ```rust
+    /// let mut ws = WebSocket::new();
+    /// ws.connect("wss://echo.websocket.org/");
+    /// ```
     pub fn connect(&mut self, url: &str) -> bool {
         if self.state != WebSocketState::Closed {
             return false;
@@ -151,12 +173,15 @@ impl WebSocket {
         }
     }
 
+    /// Get id field of websocket.
     pub fn get_id(&self) -> i32 {
         self.id
     }
+    /// Get current websocket state.
     pub fn get_state(&self) -> WebSocketState {
         self.state
     }
+    /// Get the WebSocket.bufferedAmount field into bufferedAmount.    
     pub fn get_buffered_amount(&self) -> usize {
         let mut size: usize = 0;
         unsafe {
@@ -165,6 +190,7 @@ impl WebSocket {
 
         size
     }
+    /// Get the websocket URL field.    
     pub fn get_url(&self) -> String {
         let mut size: i32 = 0;
         unsafe {
@@ -175,6 +201,7 @@ impl WebSocket {
             String::from_utf8(url_raw).unwrap()
         }
     }
+    /// Get the websocket protocol field.    
     pub fn get_protocol(&self) -> String {
         let mut size: i32 = 0;
         unsafe {
@@ -186,6 +213,7 @@ impl WebSocket {
         }
     }
 
+    /// Set all internal callbacks for current object.    
     fn init_internal_callback(&mut self) {
         unsafe {
             emscripten_websocket_set_onopen_callback_on_thread(
@@ -214,6 +242,7 @@ impl WebSocket {
             );
         }
     }
+    /// Clear all internal callbacks for current object.    
     pub fn clear_internal_callback(&mut self) {
         unsafe {
             emscripten_websocket_set_onopen_callback_on_thread(
@@ -243,19 +272,29 @@ impl WebSocket {
         }
     }
 
+    /// Set on open callback for current object.    
     pub fn set_open_callback(&mut self, cb: Option<fn(&mut Self)>) {
         self.open_cb = cb;
     }
+    /// Set on error callback for current object.    
     pub fn set_error_callback(&mut self, cb: Option<fn(&mut Self)>) {
         self.error_cb = cb;
     }
+    /// Set on close callback for current object.    
     pub fn set_close_callback(&mut self, cb: Option<fn(&mut Self)>) {
         self.close_cb = cb;
     }
+    /// Set on message callback for current object.    
     pub fn set_message_callback(&mut self, cb: Option<fn(&mut Self, WebSocketData)>) {
         self.message_cb = cb;
     }
 
+    /// Send UTF-8 formatted string through websocket. The state of current socket should be
+    /// opened else the function will return false.    
+    /// # Examples
+    /// ```rust
+    /// ws.send_utf8_text("foo");
+    /// ```
     pub fn send_utf8_text(&mut self, str: &str) -> bool {
         if self.state == WebSocketState::Opened {
             let text_cstr = CString::new(str).unwrap();
@@ -269,6 +308,12 @@ impl WebSocket {
         }
     }
 
+    /// Send UTF-8 raw data through websocket. The state of current socket should be
+    /// opened else the function will return false.    
+    /// # Examples
+    /// ```rust
+    /// ws.send_binary([42, 69]);
+    /// ```
     pub fn send_binary(&mut self, data: &mut [u8]) -> bool {
         if self.state == WebSocketState::Opened {
             unsafe {
@@ -285,6 +330,8 @@ impl WebSocket {
         }
     }
 
+    /// Close the current websocket. This function will clear all
+    /// callbacks and trigger on close callback.
     pub fn close(&mut self, code: u16, reason: &str) {
         self.state = WebSocketState::Closing;
         let reason_cstr = CString::new(reason).unwrap();
