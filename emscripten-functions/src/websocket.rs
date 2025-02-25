@@ -1,7 +1,17 @@
-use emscripten_functions_sys::websocket::*;
+use emscripten_functions_sys::websocket::{
+    pthread_t, EmscriptenWebSocketCloseEvent, EmscriptenWebSocketErrorEvent,
+    EmscriptenWebSocketMessageEvent, EmscriptenWebSocketOpenEvent, __pthread,
+    emscripten_websocket_close, emscripten_websocket_delete,
+    emscripten_websocket_get_buffered_amount, emscripten_websocket_get_protocol,
+    emscripten_websocket_get_protocol_length, emscripten_websocket_get_url,
+    emscripten_websocket_get_url_length, emscripten_websocket_is_supported,
+    emscripten_websocket_new, emscripten_websocket_send_binary,
+    emscripten_websocket_send_utf8_text, emscripten_websocket_set_onclose_callback_on_thread,
+    emscripten_websocket_set_onerror_callback_on_thread,
+    emscripten_websocket_set_onmessage_callback_on_thread,
+    emscripten_websocket_set_onopen_callback_on_thread, EmscriptenWebSocketCreateAttributes,
+};
 use std::ffi::CString;
-
-// NOTE: Need to add EMCC_CFLAGS="[...] -lwebsocket.js" before cargo build --target=wasm32-unknown-emscripten to prevent javascript linking error
 
 pub const EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD: pthread_t = 0x2 as *mut __pthread;
 
@@ -119,7 +129,7 @@ impl WebSocket {
     ///
     /// # Examples
     /// ```rust
-    /// let mut ws = WebSocket::new();
+    /// let mut ws = WebSocket::new().unwrap();
     /// ws.connect("wss://echo.websocket.org/");
     /// ```
     pub fn new() -> Option<WebSocket> {
@@ -143,7 +153,7 @@ impl WebSocket {
     ///
     /// # Examples
     /// ```rust
-    /// let mut ws = WebSocket::new();
+    /// let mut ws = WebSocket::new().unwrap();
     /// ws.connect("wss://echo.websocket.org/");
     /// ```
     pub fn connect(&mut self, url: &str) -> bool {
@@ -291,8 +301,11 @@ impl WebSocket {
 
     /// Send UTF-8 formatted string through websocket. The state of current socket should be
     /// opened else the function will return false.    
+    ///
     /// # Examples
     /// ```rust
+    /// let mut ws = WebSocket::new().unwrap();
+    /// ws.connect("wss://echo.websocket.org/");
     /// ws.send_utf8_text("foo");
     /// ```
     pub fn send_utf8_text(&mut self, str: &str) -> bool {
@@ -309,9 +322,12 @@ impl WebSocket {
     }
 
     /// Send UTF-8 raw data through websocket. The state of current socket should be
-    /// opened else the function will return false.    
+    /// opened else the function will return false.
+    ///
     /// # Examples
     /// ```rust
+    /// let mut ws = WebSocket::new().unwrap();
+    /// ws.connect("wss://echo.websocket.org/");
     /// ws.send_binary([42, 69]);
     /// ```
     pub fn send_binary(&mut self, data: &mut [u8]) -> bool {
