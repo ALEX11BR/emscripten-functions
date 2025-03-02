@@ -5,3 +5,4 @@
 
 pub mod console;
 pub mod emscripten;
+pub mod websocket;
