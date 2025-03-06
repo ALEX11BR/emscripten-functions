@@ -20,7 +20,7 @@ Using the 2 crates, interacting with the web environment of emscripten becomes e
 ## Some tips
 
 ### Functions that can be triggered dynamically
-- Make a function with `#[no_mangle] pub extern "C" fn function_name ...` (they can accept and return integers, floats,  C-style strings, booleans, pointers or arrays of byte-sized numbers),
+- Make a function with `#[no_mangle] pub extern "C" fn function_name ...` (they can accept and return integers, floats, C-style strings, booleans, pointers or arrays of byte-sized numbers),
 - add `-sEXPORTED_RUNTIME_METHODS=ccall,cwrap` and `-sEXPORTED_FUNCTIONS=_function_name,...` (add a preceding underscore to your functions' names and separate them with commas) as link arguments,
 
 ... and you can call your functions using the [ccall/cwrap](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/Interacting-with-code.html#interacting-with-code-ccall-cwrap) emscripten javascript functions.
@@ -170,3 +170,7 @@ set_main_loop_with_arg(|data| {
 ### An SDL game example
 
 An SDL game example that has image handling can be found in [`examples/simple-game`](examples/simple-game).
+
+### A websocket sample
+
+A little websocket client application made using [`emscripten_functions::websocket`](emscripten-functions/src/websocket.rs) can be found in [`examples/websocket-example`](examples/websocket-example).

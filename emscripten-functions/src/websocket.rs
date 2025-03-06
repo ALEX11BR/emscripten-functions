@@ -1,3 +1,10 @@
+//! Select methods (with rust-native parameter and return value types) from the emscripten [`websocket.h`] header file, and helper types for them.
+//!
+//! For this module's functions to work, the `-lwebsocket` flag needs to be passed to the linker by your application.
+//! This can be accomplished e.g. by adding `println!("cargo:rustc-link-arg=-lwebsocket");` to the `main` function in `build.rs`.
+//!
+//! [`websocket.h`]: https://github.com/emscripten-core/emscripten/blob/main/system/include/emscripten/websocket.h
+
 use emscripten_functions_sys::websocket::{
     pthread_t, EmscriptenWebSocketCloseEvent, EmscriptenWebSocketErrorEvent,
     EmscriptenWebSocketMessageEvent, EmscriptenWebSocketOpenEvent, __pthread,
@@ -149,12 +156,15 @@ impl WebSocket {
     /// let mut ws = WebSocket::new().unwrap();
     /// ws.connect("wss://echo.websocket.org/");
     /// ```
-    pub fn connect(&mut self, url: &str) -> bool {
+    pub fn connect<T>(&mut self, url: T) -> bool
+    where
+        T: AsRef<str>,
+    {
         if self.state != WebSocketState::Closed {
             return false;
         }
 
-        let url_cstr = CString::new(url).unwrap();
+        let url_cstr = CString::new(url.as_ref()).unwrap();
         let mut create_attr = EmscriptenWebSocketCreateAttributes {
             url: url_cstr.as_ptr(),
             protocols: std::ptr::null(),
@@ -184,7 +194,7 @@ impl WebSocket {
     pub fn get_state(&self) -> WebSocketState {
         self.state
     }
-    /// Get the WebSocket.bufferedAmount field into bufferedAmount.    
+    /// Get the WebSocket.bufferedAmount field into bufferedAmount.
     pub fn get_buffered_amount(&self) -> usize {
         let mut size: usize = 0;
         unsafe {
@@ -193,7 +203,7 @@ impl WebSocket {
 
         size
     }
-    /// Get the websocket URL field.    
+    /// Get the websocket URL field.
     pub fn get_url(&self) -> String {
         let mut size: i32 = 0;
         unsafe {
@@ -204,7 +214,7 @@ impl WebSocket {
             String::from_utf8(url_raw).unwrap()
         }
     }
-    /// Get the websocket protocol field.    
+    /// Get the websocket protocol field.
     pub fn get_protocol(&self) -> String {
         let mut size: i32 = 0;
         unsafe {
@@ -216,7 +226,7 @@ impl WebSocket {
         }
     }
 
-    /// Set all internal callbacks for current object.    
+    /// Set all internal callbacks for current object.
     fn init_internal_callback(&mut self) {
         unsafe {
             emscripten_websocket_set_onopen_callback_on_thread(
@@ -245,7 +255,7 @@ impl WebSocket {
             );
         }
     }
-    /// Clear all internal callbacks for current object.    
+    /// Clear all internal callbacks for current object.
     pub fn clear_internal_callback(&mut self) {
         unsafe {
             emscripten_websocket_set_onopen_callback_on_thread(
@@ -275,25 +285,25 @@ impl WebSocket {
         }
     }
 
-    /// Set on open callback for current object.    
+    /// Set on open callback for current object.
     pub fn set_open_callback(&mut self, cb: Option<fn(&mut Self)>) {
         self.open_cb = cb;
     }
-    /// Set on error callback for current object.    
+    /// Set on error callback for current object.
     pub fn set_error_callback(&mut self, cb: Option<fn(&mut Self)>) {
         self.error_cb = cb;
     }
-    /// Set on close callback for current object.    
+    /// Set on close callback for current object.
     pub fn set_close_callback(&mut self, cb: Option<fn(&mut Self)>) {
         self.close_cb = cb;
     }
-    /// Set on message callback for current object.    
+    /// Set on message callback for current object.
     pub fn set_message_callback(&mut self, cb: Option<fn(&mut Self, WebSocketData)>) {
         self.message_cb = cb;
     }
 
     /// Send UTF-8 formatted string through websocket. The state of current socket should be
-    /// opened else the function will return false.    
+    /// opened else the function will return false.
     ///
     /// # Examples
     /// ```rust
@@ -301,8 +311,11 @@ impl WebSocket {
     /// ws.connect("wss://echo.websocket.org/");
     /// ws.send_utf8_text("foo");
     /// ```
-    pub fn send_utf8_text(&mut self, str: &str) -> bool {
-        let text_cstr = CString::new(str).unwrap();
+    pub fn send_utf8_text<T>(&mut self, string: T) -> bool
+    where
+        T: AsRef<str>,
+    {
+        let text_cstr = CString::new(string.as_ref()).unwrap();
         unsafe {
             let result = emscripten_websocket_send_utf8_text(self.id, text_cstr.as_ptr());
             (result as u32) == EMSCRIPTEN_RESULT_SUCCESS
@@ -332,9 +345,19 @@ impl WebSocket {
 
     /// Close the current websocket. This function will clear all
     /// callbacks and trigger on close callback.
-    pub fn close(&mut self, code: u16, reason: &str) {
+    ///
+    /// # Examples
+    /// ```rust
+    /// let mut ws = WebSocket::new().unwrap();
+    /// ws.connect("wss://echo.websocket.org/");
+    /// ws.close(1000, "over");
+    /// ```
+    pub fn close<T>(&mut self, code: u16, reason: T)
+    where
+        T: AsRef<str>,
+    {
         self.state = WebSocketState::Closing;
-        let reason_cstr = CString::new(reason).unwrap();
+        let reason_cstr = CString::new(reason.as_ref()).unwrap();
         unsafe {
             emscripten_websocket_close(self.id, code, reason_cstr.as_ptr());
         }

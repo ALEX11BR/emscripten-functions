@@ -408,7 +408,7 @@ pub fn get_screen_size() -> ScreenSize {
         emscripten::emscripten_get_screen_size(&mut width, &mut height);
     }
 
-    return ScreenSize { width, height };
+    ScreenSize { width, height }
 }
 
 /// Hides the OS mouse cursor over the canvas, unlike SDL's [`SDL_ShowCursor`], which works with the SDL cursor.

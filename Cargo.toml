@@ -6,4 +6,5 @@ members = [
 ]
 exclude = [
     "examples/simple-game",
+    "examples/websocket-example",
 ]

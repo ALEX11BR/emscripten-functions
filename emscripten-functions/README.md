@@ -5,6 +5,7 @@ This crate contains various emscripten system functions (made with rust-native p
 Functions based on ones from the following emscripten headers are available:
 - `emscripten`
 - `console`
+- `websocket` (thanks to the GitHub user @Captainfl4me)
 
 ## Examples
 For more examples and tips for emscripten in rust refer to my [main project's README](https://github.com/ALEX11BR/emscripten-functions/blob/main/README.md).
@@ -112,3 +113,7 @@ set_main_loop_with_arg(|data| {
 ### An SDL game example
 
 An SDL game example that has image handling can be found [here](../examples/simple-game).
+
+### A websocket sample
+
+A little websocket client application made using [`emscripten_functions::websocket`](src/websocket.rs) can be found [here](../examples/websocket-example).
